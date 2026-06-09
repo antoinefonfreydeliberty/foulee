@@ -1,26 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --aube-primary:  #C1532B;
+  --aube-bg:       #FDF8F3;
+  --aube-surface:  #F5EDE4;
+  --aube-amber:    #E8A44A;
+  --aube-salmon:   #D4845A;
+  --aube-text:     #3D2314;
+  --aube-muted:    #A07860;
+  --aube-border:   #EEE0D0;
+  --aube-light:    #F5BDAF;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary:  var(--aube-primary);
+  --color-bg:       var(--aube-bg);
+  --color-surface:  var(--aube-surface);
+  --color-amber:    var(--aube-amber);
+  --color-salmon:   var(--aube-salmon);
+  --color-text:     var(--aube-text);
+  --color-muted:    var(--aube-muted);
+  --color-border:   var(--aube-border);
+  --color-light:    var(--aube-light);
+  --font-sans: var(--font-geist-sans), Inter, system-ui, sans-serif;
+  --font-serif: Georgia, 'Times New Roman', serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--aube-bg);
+  color: var(--aube-text);
+  font-family: var(--font-sans);
 }
