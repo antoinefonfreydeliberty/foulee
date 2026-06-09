@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { CoachMessage } from '@/components/coach/CoachMessage'
+import ConseilsClient from '@/components/conseils/ConseilsClient'
 
 const DEFAULT_TIPS = [
   {
@@ -15,12 +17,6 @@ const DEFAULT_TIPS = [
     tip: "La régularité prime sur l'intensité. Une sortie moyenne mais faite vaut mieux qu'une sortie parfaite annulée. Chaque entraînement compte, même les petits.",
   },
 ]
-
-const CATEGORY_ICONS: Record<string, string> = {
-  Nutrition: '🥗',
-  Récupération: '😴',
-  Mental: '🧠',
-}
 
 export default async function ConseilsPage() {
   const supabase = await createClient()
@@ -44,61 +40,34 @@ export default async function ConseilsPage() {
 
   if (!profile) redirect('/onboarding')
 
-  const tips = (report?.coach_tips as { category: string; tip: string }[] | null) ?? DEFAULT_TIPS
-  const isDefault = !report?.coach_tips
-
-  const generatedDate = report?.generated_at
-    ? new Date(report.generated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+  const tips       = (report?.coach_tips as { category: string; tip: string }[] | null) ?? DEFAULT_TIPS
+  const isDefault  = !report?.coach_tips
+  const weekLabel  = report?.week_number != null
+    ? `Semaine ${report.week_number}`
     : null
 
+  const coachBubbleMsg = isDefault
+    ? `Conseils généraux pour bien démarrer. Tes conseils personnalisés arriveront après ton premier bilan 📚`
+    : `${tips.length} conseil${tips.length > 1 ? 's' : ''} pour cette semaine, adaptés à ta progression 📚`
+
   return (
-    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ background: '#F4F0EA', minHeight: '100%', paddingTop: 2 }}>
 
-      <div>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#3D2314' }}>
-          Conseils de {profile.coach_name}
+      {/* Header */}
+      <div style={{ padding: '2px 18px 12px' }}>
+        <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: -0.8 }}>
+          Conseils
         </h1>
-        <p style={{ fontSize: 13, color: '#A07860', marginTop: 4 }}>
-          {isDefault
-            ? 'Conseils généraux · Tes conseils personnalisés arriveront après ton premier bilan.'
-            : `Semaine ${report!.week_number}${generatedDate ? ` · ${generatedDate}` : ''}`}
-        </p>
+        {weekLabel && (
+          <p style={{ color: '#6E5E55', fontSize: 11, margin: '2px 0 0', fontWeight: 500 }}>{weekLabel}</p>
+        )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {tips.map(tip => (
-          <div key={tip.category} style={{
-            background: 'white',
-            border: '0.5px solid #EEE0D0',
-            borderRadius: 12,
-            padding: '16px 18px',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 20 }}>{CATEGORY_ICONS[tip.category] ?? '💡'}</span>
-              <span style={{ fontWeight: 600, color: '#3D2314', fontSize: 14 }}>
-                {tip.category}
-              </span>
-            </div>
-            <p style={{ fontSize: 14, color: '#3D2314', lineHeight: 1.6 }}>
-              {tip.tip}
-            </p>
-          </div>
-        ))}
-      </div>
+      {/* Coach Bubble */}
+      <CoachMessage coachName={profile.coach_name} content={coachBubbleMsg} />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%',
-          backgroundColor: '#C1532B',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white', fontWeight: 700, fontSize: 13, flexShrink: 0,
-        }}>
-          {profile.coach_name.charAt(0)}
-        </div>
-        <span style={{ fontSize: 13, color: '#A07860' }}>
-          {profile.coach_name} · Coach Foulée
-        </span>
-      </div>
+      {/* Filtres + Cards (client) */}
+      <ConseilsClient tips={tips} coachName={profile.coach_name} weekLabel={weekLabel} />
 
     </div>
   )

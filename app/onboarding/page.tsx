@@ -8,41 +8,41 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { COACH_OPTIONS, type CoachStyle, type RunnerLevel } from '@/types'
 
-const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+const DAYS       = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 const TOTAL_STEPS = 5
 
 interface FormData {
-  first_name: string
-  coach_name: string
-  coach_style: CoachStyle
-  weight_kg: string
-  age: string
-  runner_level: RunnerLevel | ''
-  weekly_sessions: number | null
-  best_recent_time: string
-  availability: string[]
-  goal_time: string
-  injury_history: string
+  first_name:        string
+  coach_name:        string
+  coach_style:       CoachStyle
+  weight_kg:         string
+  age:               string
+  runner_level:      RunnerLevel | ''
+  weekly_sessions:   number | null
+  best_recent_time:  string
+  availability:      string[]
+  goal_time:         string
+  injury_history:    string
 }
 
 export default function OnboardingPage() {
-  const router = useRouter()
-  const [step, setStep] = useState(1)
+  const router  = useRouter()
+  const [step,    setStep]    = useState(1)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error,   setError]   = useState('')
 
   const [form, setForm] = useState<FormData>({
-    first_name: '',
-    coach_name: '',
-    coach_style: 'warm',
-    weight_kg: '',
-    age: '',
-    runner_level: '',
-    weekly_sessions: null,
+    first_name:       '',
+    coach_name:       '',
+    coach_style:      'warm',
+    weight_kg:        '',
+    age:              '',
+    runner_level:     '',
+    weekly_sessions:  null,
     best_recent_time: '',
-    availability: [],
-    goal_time: '',
-    injury_history: '',
+    availability:     [],
+    goal_time:        '',
+    injury_history:   '',
   })
 
   const toggleDay = (day: string) => {
@@ -73,9 +73,9 @@ export default function OnboardingPage() {
 
     try {
       const res = await fetch('/api/onboarding', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body:    JSON.stringify(form),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: 'Une erreur est survenue. Réessaie.' }))
@@ -88,26 +88,36 @@ export default function OnboardingPage() {
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    border: '1px solid #DDD7CE', borderRadius: 99, padding: '12px 18px',
+    fontSize: 14, outline: 'none', background: '#FFFFFF',
+    color: '#160E08', width: '100%', fontFamily: 'inherit',
+    boxSizing: 'border-box',
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-6">
-        <div className="w-16 h-16 rounded-full bg-[#C1532B] flex items-center justify-center text-white text-2xl font-bold shrink-0">
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 20px', gap: 24, background: '#F4F0EA' }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%', background: '#C5402C',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'white', fontSize: 24, fontWeight: 900, flexShrink: 0,
+        }}>
           {form.coach_name.charAt(0)}
         </div>
-        <div className="text-center">
-          <p className="text-lg font-semibold text-[#3D2314]">
-            {form.coach_name} prépare ton programme...
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 18, fontWeight: 800, color: '#160E08', margin: '0 0 6px' }}>
+            {form.coach_name} prépare ton programme…
           </p>
-          <p className="text-sm text-[#A07860] mt-1">
-            Ça prend une dizaine de secondes. Ne quitte pas la page.
+          <p style={{ fontSize: 13, color: '#6E5E55', margin: 0 }}>
+            Ça prend une dizaine de secondes.
           </p>
         </div>
-        <div className="flex gap-2 mt-2">
+        <div style={{ display: 'flex', gap: 8 }}>
           {[0, 1, 2].map(i => (
             <div
               key={i}
-              className="w-2 h-2 rounded-full bg-[#C1532B] animate-bounce"
-              style={{ animationDelay: `${i * 0.15}s` }}
+              style={{ width: 8, height: 8, borderRadius: '50%', background: '#C5402C', animation: 'bounce 1.2s ease-in-out infinite', animationDelay: `${i * 0.15}s` }}
             />
           ))}
         </div>
@@ -116,242 +126,232 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-8 max-w-lg mx-auto">
-      <h1 className="font-serif text-2xl text-[#C1532B] font-bold text-center mb-6">Foulée</h1>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '32px 18px', maxWidth: 480, margin: '0 auto', background: '#F4F0EA' }}>
+
+      {/* Logo */}
+      <h1 style={{ color: '#C5402C', fontSize: 28, fontWeight: 900, letterSpacing: -1, textAlign: 'center', margin: '0 0 24px' }}>
+        Foulée
+      </h1>
 
       {/* Barre de progression */}
-      <div className="flex gap-1.5 mb-8">
+      <div style={{ display: 'flex', gap: 6, marginBottom: 32 }}>
         {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
           <div
             key={i}
-            className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i < step ? 'bg-[#C1532B]' : 'bg-[#EEE0D0]'
-            }`}
+            style={{
+              height: 4, flex: 1, borderRadius: 99, transition: 'background 0.2s',
+              background: i < step ? '#C5402C' : '#DDD7CE',
+            }}
           />
         ))}
       </div>
 
-      {/* Étape 1 */}
-      {step === 1 && (
-        <div className="flex flex-col gap-6 flex-1">
-          <div>
-            <h2 className="text-xl font-semibold text-[#3D2314] mb-1">Bienvenue dans Foulée</h2>
-            <p className="text-[#A07860] text-sm">
-              Prépare le semi-marathon Vannes-Auray du 13 septembre 2026 avec un coach personnel.
-            </p>
-          </div>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-[#3D2314]">Comment tu t'appelles ?</span>
-            <input
-              autoFocus
-              type="text"
-              placeholder="Ton prénom"
-              value={form.first_name}
-              onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))}
-              className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-base focus:outline-none focus:border-[#C1532B] bg-white"
-            />
-          </label>
-        </div>
-      )}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      {/* Étape 2 */}
-      {step === 2 && (
-        <div className="flex flex-col gap-4 flex-1">
-          <div>
-            <h2 className="text-xl font-semibold text-[#3D2314] mb-1">Choisis ton coach</h2>
-            <p className="text-[#A07860] text-sm">Il t'accompagnera pendant les 14 semaines de préparation.</p>
-          </div>
-          {COACH_OPTIONS.map(coach => (
-            <button
-              key={coach.name}
-              onClick={() => setForm(f => ({ ...f, coach_name: coach.name, coach_style: coach.style }))}
-              className={`w-full text-left rounded-xl p-4 border transition-all ${
-                form.coach_name === coach.name
-                  ? 'border-[#C1532B] bg-[#FDF2EE]'
-                  : 'border-[#EEE0D0] bg-white'
-              }`}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-full bg-[#C1532B] flex items-center justify-center text-white font-bold text-base shrink-0">
-                  {coach.name.charAt(0)}
-                </div>
-                <div>
-                  <p className="font-medium text-[#3D2314]">{coach.name}</p>
-                  <p className="text-xs text-[#A07860]">{coach.description}</p>
-                </div>
-              </div>
-              <p className="text-sm text-[#A07860] italic pl-[52px]">"{coach.example}"</p>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Étape 3 */}
-      {step === 3 && (
-        <div className="flex flex-col gap-5 flex-1">
-          <div>
-            <h2 className="text-xl font-semibold text-[#3D2314] mb-1">Ton profil de coureur</h2>
-          </div>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-[#3D2314]">
-              Poids (kg) <span className="text-[#A07860] font-normal">· optionnel</span>
-            </span>
-            <input
-              type="number"
-              placeholder="70"
-              value={form.weight_kg}
-              onChange={e => setForm(f => ({ ...f, weight_kg: e.target.value }))}
-              className="border border-[#EEE0D0] rounded-lg px-4 py-3 focus:outline-none focus:border-[#C1532B] bg-white"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-[#3D2314]">Âge</span>
-            <input
-              type="number"
-              placeholder="35"
-              value={form.age}
-              onChange={e => setForm(f => ({ ...f, age: e.target.value }))}
-              className="border border-[#EEE0D0] rounded-lg px-4 py-3 focus:outline-none focus:border-[#C1532B] bg-white"
-            />
-          </label>
-
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-[#3D2314]">Niveau</span>
-            <div className="flex gap-2">
-              {([
-                ['beginner', 'Débutant'],
-                ['intermediate', 'Intermédiaire'],
-                ['experienced', 'Confirmé'],
-              ] as [RunnerLevel, string][]).map(([val, label]) => (
-                <button
-                  key={val}
-                  onClick={() => setForm(f => ({ ...f, runner_level: val }))}
-                  className={`flex-1 py-2.5 text-sm rounded-lg border transition-colors ${
-                    form.runner_level === val
-                      ? 'border-[#C1532B] bg-[#FDF2EE] text-[#C1532B]'
-                      : 'border-[#EEE0D0] text-[#A07860]'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+        {/* Étape 1 */}
+        {step === 1 && (
+          <>
+            <div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
+                Bienvenue dans Foulée
+              </h2>
+              <p style={{ color: '#6E5E55', fontSize: 13, margin: 0 }}>
+                Prépare le semi-marathon Vannes-Auray du 13 septembre 2026 avec un coach personnel.
+              </p>
             </div>
-          </div>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#160E08' }}>Comment tu t&apos;appelles ?</span>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Ton prénom"
+                value={form.first_name}
+                onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))}
+                style={inputStyle}
+              />
+            </label>
+          </>
+        )}
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-[#3D2314]">Sorties habituelles / semaine</span>
-            <div className="flex gap-2">
-              {[1, 2, 3, '4+'].map(n => (
-                <button
-                  key={n}
-                  onClick={() => setForm(f => ({ ...f, weekly_sessions: typeof n === 'string' ? 4 : n }))}
-                  className={`flex-1 py-2.5 text-sm rounded-lg border transition-colors ${
-                    form.weekly_sessions === (typeof n === 'string' ? 4 : n)
-                      ? 'border-[#C1532B] bg-[#FDF2EE] text-[#C1532B]'
-                      : 'border-[#EEE0D0] text-[#A07860]'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
+        {/* Étape 2 */}
+        {step === 2 && (
+          <>
+            <div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
+                Choisis ton coach
+              </h2>
+              <p style={{ color: '#6E5E55', fontSize: 13, margin: 0 }}>
+                Il t&apos;accompagnera pendant les 14 semaines de préparation.
+              </p>
             </div>
-          </div>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-[#3D2314]">
-              Performance récente <span className="text-[#A07860] font-normal">· optionnel</span>
-            </span>
-            <input
-              type="text"
-              placeholder="Ex : 1h52 sur semi il y a 2 ans, ou 45min sur 10km"
-              value={form.best_recent_time}
-              onChange={e => setForm(f => ({ ...f, best_recent_time: e.target.value }))}
-              className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white"
-            />
-          </label>
-        </div>
-      )}
-
-      {/* Étape 4 */}
-      {step === 4 && (
-        <div className="flex flex-col gap-5 flex-1">
-          <div>
-            <h2 className="text-xl font-semibold text-[#3D2314] mb-1">Quand es-tu disponible pour courir ?</h2>
-            <p className="text-[#A07860] text-sm">Sélectionne au moins 2 jours.</p>
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {DAYS.map(day => (
+            {COACH_OPTIONS.map(coach => (
               <button
-                key={day}
-                onClick={() => toggleDay(day)}
-                className={`py-3 text-sm rounded-lg border capitalize transition-colors ${
-                  form.availability.includes(day)
-                    ? 'border-[#C1532B] bg-[#FDF2EE] text-[#C1532B]'
-                    : 'border-[#EEE0D0] text-[#A07860]'
-                }`}
+                key={coach.name}
+                onClick={() => setForm(f => ({ ...f, coach_name: coach.name, coach_style: coach.style }))}
+                style={{
+                  width: '100%', textAlign: 'left', borderRadius: 16, padding: '14px 16px',
+                  border: `1px solid ${form.coach_name === coach.name ? '#C5402C' : '#DDD7CE'}`,
+                  background: form.coach_name === coach.name ? 'rgba(197,64,44,0.08)' : '#FFFFFF',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}
               >
-                {day.slice(0, 3)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%', background: '#C5402C',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'white', fontWeight: 900, fontSize: 16, flexShrink: 0,
+                  }}>
+                    {coach.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p style={{ fontWeight: 700, color: '#160E08', margin: '0 0 2px', fontSize: 14 }}>{coach.name}</p>
+                    <p style={{ fontSize: 11, color: '#6E5E55', margin: 0 }}>{coach.description}</p>
+                  </div>
+                </div>
+                <p style={{ fontSize: 12, color: '#6E5E55', fontStyle: 'italic', margin: 0, paddingLeft: 52 }}>
+                  &ldquo;{coach.example}&rdquo;
+                </p>
               </button>
             ))}
-          </div>
-        </div>
-      )}
+          </>
+        )}
 
-      {/* Étape 5 */}
-      {step === 5 && (
-        <div className="flex flex-col gap-5 flex-1">
-          <div>
-            <h2 className="text-xl font-semibold text-[#3D2314] mb-1">Ton objectif et tes contraintes</h2>
-          </div>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-[#3D2314]">Ton objectif</span>
-            <input
-              type="text"
-              placeholder="Ex : finir sous 2h, terminer, 1h45"
-              value={form.goal_time}
-              onChange={e => setForm(f => ({ ...f, goal_time: e.target.value }))}
-              className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-[#3D2314]">
-              Blessures ou douleurs chroniques <span className="text-[#A07860] font-normal">· optionnel</span>
-            </span>
-            <textarea
-              placeholder="Ex : tendinite au genou gauche, douleur au mollet... ou laisse vide si tout va bien"
-              value={form.injury_history}
-              onChange={e => setForm(f => ({ ...f, injury_history: e.target.value }))}
-              rows={3}
-              className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white resize-none"
-            />
-          </label>
-        </div>
-      )}
+        {/* Étape 3 */}
+        {step === 3 && (
+          <>
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 4px', letterSpacing: -0.5 }}>
+              Ton profil de coureur
+            </h2>
 
-      {error && <p className="text-[#D4845A] text-sm mt-4">{error}</p>}
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#160E08' }}>
+                Poids (kg) <span style={{ color: '#6E5E55', fontWeight: 400 }}>· optionnel</span>
+              </span>
+              <input type="number" placeholder="70" value={form.weight_kg}
+                onChange={e => setForm(f => ({ ...f, weight_kg: e.target.value }))} style={inputStyle} />
+            </label>
 
-      <div className="flex gap-3 mt-8 pb-4">
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#160E08' }}>Âge</span>
+              <input type="number" placeholder="35" value={form.age}
+                onChange={e => setForm(f => ({ ...f, age: e.target.value }))} style={inputStyle} />
+            </label>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#160E08' }}>Niveau</span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {([['beginner', 'Débutant'], ['intermediate', 'Intermédiaire'], ['experienced', 'Confirmé']] as [RunnerLevel, string][]).map(([val, label]) => (
+                  <button key={val} onClick={() => setForm(f => ({ ...f, runner_level: val }))}
+                    style={{
+                      flex: 1, padding: '10px 4px', fontSize: 12, borderRadius: 99, cursor: 'pointer',
+                      border: `1px solid ${form.runner_level === val ? '#C5402C' : '#DDD7CE'}`,
+                      background: form.runner_level === val ? 'rgba(197,64,44,0.08)' : '#FFFFFF',
+                      color: form.runner_level === val ? '#C5402C' : '#6E5E55', fontWeight: 600, transition: 'all 0.15s',
+                    }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#160E08' }}>Sorties habituelles / semaine</span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[1, 2, 3, '4+'].map(n => (
+                  <button key={n} onClick={() => setForm(f => ({ ...f, weekly_sessions: typeof n === 'string' ? 4 : n }))}
+                    style={{
+                      flex: 1, padding: '10px 4px', fontSize: 13, borderRadius: 99, cursor: 'pointer',
+                      border: `1px solid ${form.weekly_sessions === (typeof n === 'string' ? 4 : n) ? '#C5402C' : '#DDD7CE'}`,
+                      background: form.weekly_sessions === (typeof n === 'string' ? 4 : n) ? 'rgba(197,64,44,0.08)' : '#FFFFFF',
+                      color: form.weekly_sessions === (typeof n === 'string' ? 4 : n) ? '#C5402C' : '#6E5E55', fontWeight: 600, transition: 'all 0.15s',
+                    }}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#160E08' }}>
+                Performance récente <span style={{ color: '#6E5E55', fontWeight: 400 }}>· optionnel</span>
+              </span>
+              <input type="text" placeholder="Ex : 1h52 sur semi il y a 2 ans, ou 45min sur 10km"
+                value={form.best_recent_time}
+                onChange={e => setForm(f => ({ ...f, best_recent_time: e.target.value }))} style={inputStyle} />
+            </label>
+          </>
+        )}
+
+        {/* Étape 4 */}
+        {step === 4 && (
+          <>
+            <div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
+                Quand es-tu disponible ?
+              </h2>
+              <p style={{ color: '#6E5E55', fontSize: 13, margin: 0 }}>Sélectionne au moins 2 jours.</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              {DAYS.map(day => (
+                <button key={day} onClick={() => toggleDay(day)}
+                  style={{
+                    padding: '10px 4px', fontSize: 12, borderRadius: 99, cursor: 'pointer',
+                    border: `1px solid ${form.availability.includes(day) ? '#C5402C' : '#DDD7CE'}`,
+                    background: form.availability.includes(day) ? 'rgba(197,64,44,0.08)' : '#FFFFFF',
+                    color: form.availability.includes(day) ? '#C5402C' : '#6E5E55',
+                    fontWeight: form.availability.includes(day) ? 700 : 500, transition: 'all 0.15s',
+                    textTransform: 'capitalize',
+                  }}>
+                  {day.slice(0, 3)}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Étape 5 */}
+        {step === 5 && (
+          <>
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 4px', letterSpacing: -0.5 }}>
+              Ton objectif et tes contraintes
+            </h2>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#160E08' }}>Ton objectif</span>
+              <input type="text" placeholder="Ex : finir sous 2h, terminer, 1h45"
+                value={form.goal_time}
+                onChange={e => setForm(f => ({ ...f, goal_time: e.target.value }))} style={inputStyle} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#160E08' }}>
+                Blessures ou douleurs chroniques <span style={{ color: '#6E5E55', fontWeight: 400 }}>· optionnel</span>
+              </span>
+              <textarea
+                placeholder="Ex : tendinite au genou gauche... ou laisse vide si tout va bien"
+                value={form.injury_history}
+                onChange={e => setForm(f => ({ ...f, injury_history: e.target.value }))}
+                rows={3}
+                style={{ ...inputStyle, borderRadius: 16, resize: 'none', paddingTop: 14 }}
+              />
+            </label>
+          </>
+        )}
+
+      </div>
+
+      {error && <p style={{ color: '#C5402C', fontSize: 13, marginTop: 8 }}>{error}</p>}
+
+      <div style={{ display: 'flex', gap: 10, marginTop: 24, paddingBottom: 16 }}>
         {step > 1 && (
-          <Button variant="secondary" onClick={() => setStep(s => s - 1)} className="flex-1">
+          <Button variant="secondary" onClick={() => setStep(s => s - 1)} style={{ flex: 1 }}>
             Retour
           </Button>
         )}
         {step < TOTAL_STEPS ? (
-          <Button
-            onClick={() => setStep(s => s + 1)}
-            disabled={!canNext()}
-            className="flex-1"
-          >
+          <Button onClick={() => setStep(s => s + 1)} disabled={!canNext()} style={{ flex: 1 }}>
             Suivant
           </Button>
         ) : (
-          <Button
-            onClick={handleSubmit}
-            disabled={!canNext()}
-            className="flex-1"
-          >
+          <Button onClick={handleSubmit} disabled={!canNext()} style={{ flex: 1 }}>
             Créer mon programme
           </Button>
         )}

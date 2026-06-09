@@ -4,15 +4,27 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'coach'
 }
 
-export const Card = ({ variant = 'default', className = '', children, ...props }: CardProps) => {
-  const base = 'rounded-xl p-4 sm:p-[18px]'
-  const styles = {
-    default: 'bg-white border border-[#EEE0D0]',
-    coach: 'bg-[#F5EDE4] border border-[#EADDD0]',
+export const Card = ({ variant = 'default', className = '', style, children, ...props }: CardProps) => {
+  const base: React.CSSProperties = {
+    background: '#FFFFFF',
+    border: '1px solid #DDD7CE',
+    borderRadius: 16,
+    padding: '13px 15px',
+  }
+  const coach: React.CSSProperties = {
+    background: '#FFFFFF',
+    border: '1px solid rgba(197,64,44,0.33)',
+    borderRadius: 16,
+    padding: '12px 13px',
+    boxShadow: '0 2px 12px rgba(197,64,44,0.10)',
   }
 
   return (
-    <div className={`${base} ${styles[variant]} ${className}`} {...props}>
+    <div
+      className={className}
+      style={{ ...(variant === 'coach' ? coach : base), ...style }}
+      {...props}
+    >
       {children}
     </div>
   )

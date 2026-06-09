@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { anthropic, MODEL, extractJSON, callClaudeWithRetry } from '@/lib/claude/client'
-import { buildSystemPrompt, buildWeeklyReportPrompt, buildEmailPrompt } from '@/lib/claude/prompts'
+import { buildSystemPrompt, buildWeeklyReportPrompt } from '@/lib/claude/prompts'
 import { sendWeeklyEmail } from '@/lib/brevo/client'
-import { getProgramWeek, getWeekStart } from '@/lib/utils/dates'
+import { buildEmailHtml } from '@/lib/brevo/email-builder'
+import { getDaysLeft, getProgramWeek, getWeekStart } from '@/lib/utils/dates'
 import { calcPace } from '@/lib/utils/pace'
 import type { Profile, TrainingSession } from '@/types'
 
@@ -124,26 +125,17 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // Generate email HTML
-      const htmlContent = await callClaudeWithRetry(async () => {
-        const msg = await anthropic.messages.create({
-          model: MODEL,
-          max_tokens: 1500,
-          temperature: 0.7,
-          system: buildSystemPrompt(profile),
-          messages: [{
-            role: 'user',
-            content: buildEmailPrompt({
-              profile,
-              coachAnalysis: reportResult.coach_analysis,
-              stats,
-              nextWeekProgram: reportResult.next_week_program,
-              weekNumber,
-              magicLink,
-            }),
-          }],
-        })
-        return msg.content[0].type === 'text' ? msg.content[0].text : ''
+      // Generate email HTML from template
+      const htmlContent = buildEmailHtml({
+        firstName:       profile.first_name,
+        coachName:       profile.coach_name,
+        coachAnalysis:   reportResult.coach_analysis,
+        stats,
+        nextWeekProgram: reportResult.next_week_program,
+        weekNumber,
+        daysLeft:        getDaysLeft(),
+        nextWeekStart,
+        magicLink,
       })
 
       // Upsert weekly report

@@ -4,17 +4,24 @@ interface AvatarProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-const sizes = {
-  sm: 'w-8 h-8 text-sm',
-  md: 'w-10 h-10 text-base',
-  lg: 'w-12 h-12 text-lg',
+const sizes: Record<string, { wh: number; fs: number; fw: number }> = {
+  sm:  { wh: 28, fs: 11, fw: 900 },
+  md:  { wh: 36, fs: 14, fw: 900 },
+  lg:  { wh: 40, fs: 15, fw: 900 },
 }
 
 export const Avatar = ({ initiale, variant = 'user', size = 'md' }: AvatarProps) => {
-  const bg = variant === 'user' ? 'bg-[#E8A44A] text-[#3D2314]' : 'bg-[#C1532B] text-white'
+  const { wh, fs, fw } = sizes[size]
+  const bg    = variant === 'user'  ? '#C5402C' : '#C5402C'
+  const color = 'white'
 
   return (
-    <div className={`${sizes[size]} ${bg} rounded-full flex items-center justify-center font-semibold flex-shrink-0`}>
+    <div style={{
+      width: wh, height: wh, borderRadius: '50%',
+      background: bg, color,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: fs, fontWeight: fw, flexShrink: 0,
+    }}>
       {initiale.toUpperCase()}
     </div>
   )

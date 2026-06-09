@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    ::-webkit-scrollbar { display: none; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+  </style>
+</helmet>
+
+<div style="min-height:100vh; background:#EDE9E2; padding:48px 24px 80px; font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+
+  <div style="text-align:center; margin-bottom:36px;">
+    <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(197,64,44,0.1); border:1px solid rgba(197,64,44,0.25); border-radius:99px; padding:5px 16px; margin-bottom:16px;">
+      <div style="width:6px; height:6px; border-radius:50%; background:#C5402C;"></div>
+      <span style="color:#C5402C; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase;">Foulée · Studio Jour</span>
+    </div>
+    <h1 style="color:#160E08; font-size:38px; font-weight:900; margin:0 0 8px; letter-spacing:-1.5px;">Redesign 2025</h1>
+    <p style="color:#9A8D84; font-size:14px; margin:0;">Naviguez entre les 5 écrans</p>
+  </div>
+
+  {{ nav }}
+
+  <div style="display:flex; justify-content:center; align-items:flex-start; margin-top:32px;">
+    {{ phoneA }}
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { s: 0 };
+
+  T = [
+    {
+      id:'dark', label:'Obsidian · Nuit',
+      bg:'#080B14', s1:'#111827', s2:'#1A2236', s3:'#0D1120',
+      a:'#FF4533', a2:'#00E5A0',
+      as:'rgba(255,69,51,0.14)', a2s:'rgba(0,229,160,0.12)',
+      text:'#EDF0FF', sub:'#5B6484', muted:'#252F48',
+      border:'#1E2840', nav:'#09101E',
+    },
+    {
+      id:'light', label:'Studio · Jour',
+      bg:'#F4F0EA', s1:'#FFFFFF', s2:'#EDE8E1', s3:'#E3DDD5',
+      a:'#C5402C', a2:'#2A6B50',
+      as:'rgba(197,64,44,0.1)', a2s:'rgba(42,107,80,0.1)',
+      text:'#160E08', sub:'#6E5E55', muted:'#C5BCAF',
+      border:'#DDD7CE', nav:'#FFFFFF',
+    },
+  ];
+
+  labels = ['Bilan','Conseils','Groupe','Rapports','Check-in','Coach'];
+
+  // ── Icônes SVG ──────────────────────────────────────────────────
+  ic(name, sz, col) {
+    const P = {
+      home:  ['M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z','M9 22V12h6v10'],
+      bulb:  ['M9 18h6','M10 22h4','M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2h-4a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z'],
+      users: ['M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2','M23 21v-2a4 4 0 00-3-3.87','M9 7a4 4 0 100 8 4 4 0 000-8z','M16 3.13a4 4 0 010 7.75'],
+      bar:   ['M18 20V10','M12 20V4','M6 20v-6'],
+      zap:   ['M13 2L3 14h9l-1 8 10-12h-9l1-8z'],
+      check: ['M20 6L9 17l-5-5'],
+    };
+    return React.createElement('svg',{
+      width:sz||20,height:sz||20,viewBox:'0 0 24 24',
+      fill:'none',stroke:col||'currentColor',strokeWidth:2,
+      strokeLinecap:'round',strokeLinejoin:'round',
+      style:{flexShrink:0,display:'block'},
+    },...(P[name]||[]).map((d,i)=>React.createElement('path',{key:i,d})));
+  }
+
+  // ── Status bar ──────────────────────────────────────────────────
+  sb(t) {
+    return React.createElement('div',{style:{height:48,padding:'12px 22px 0',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}},
+      React.createElement('span',{style:{color:t.text,fontSize:15,fontWeight:600}},'9:41'),
+      React.createElement('div',{style:{display:'flex',gap:4,alignItems:'center'}},
+        React.createElement('div',{style:{display:'flex',gap:2,alignItems:'flex-end'}},
+          ...[3,5,7,9].map((h,i)=>React.createElement('div',{key:i,style:{width:3,height:h,background:t.text,borderRadius:1,opacity:i<3?1:0.25}}))
+        ),
+        React.createElement('div',{style:{width:22,height:11,border:`1.5px solid ${t.text}`,borderRadius:3,padding:'1.5px',display:'flex',alignItems:'center'}},
+          React.createElement('div',{style:{width:'75%',height:'100%',background:t.text,borderRadius:1}})
+        )
+      )
+    );
+  }
+
+  // ── Bottom nav ──────────────────────────────────────────────────
+  bnav(t) {
+    const e=React.createElement;
+    const tabs=[{l:'Bilan',ic:'home'},{l:'Conseils',ic:'bulb'},{l:'Groupe',ic:'users'},{l:'Rapports',ic:'bar'}];
+    const si=Math.min(this.state.s,3);
+    return e('div',{style:{height:80,background:t.nav,borderTop:`1px solid ${t.border}`,display:'flex',alignItems:'flex-start',paddingTop:10,flexShrink:0}},
+      ...tabs.map((it,i)=>{
+        const on=si===i;
+        return e('div',{key:i,style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2}},
+          this.ic(it.ic,21,on?t.a:t.muted),
+          e('span',{style:{fontSize:10,fontWeight:on?700:400,color:on?t.a:t.muted}},it.l),
+          on?e('div',{style:{width:4,height:4,borderRadius:'50%',background:t.a,marginTop:1}}):null
+        );
+      })
+    );
+  }
+
+  // ── Coach message ───────────────────────────────────────────────
+  coach(t, msg) {
+    const e=React.createElement;
+    return e('div',{
+      onClick:()=>this.setState({s:5}),
+      style:{
+        margin:'0 14px 12px',background:t.s1,borderRadius:16,
+        padding:'12px 13px',display:'flex',gap:10,
+        border:`1px solid ${t.a}55`,cursor:'pointer',
+        boxShadow:`0 2px 12px ${t.as}`,
+        transition:'transform 0.12s, box-shadow 0.12s',
+      }
+    },
+      // Avatar + pastille verte
+      e('div',{style:{position:'relative',flexShrink:0}},
+        e('div',{style:{width:36,height:36,borderRadius:'50%',background:t.a,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:14,fontWeight:900,boxShadow:`0 4px 12px ${t.as}`}},'M'),
+        e('div',{style:{position:'absolute',bottom:1,right:0,width:10,height:10,borderRadius:'50%',background:'#22C55E',border:`2px solid ${t.s1}`}})
+      ),
+      // Texte
+      e('div',{style:{flex:1,minWidth:0}},
+        e('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:3}},
+          e('p',{style:{color:t.a,fontSize:10,margin:0,fontWeight:700,letterSpacing:0.5}},'MARC · COACH IA'),
+          e('div',{style:{display:'flex',alignItems:'center',gap:4,background:t.as,borderRadius:99,padding:'2px 8px'}},
+            e('svg',{width:10,height:10,viewBox:'0 0 24 24',fill:'none',stroke:t.a,strokeWidth:2.5,strokeLinecap:'round',strokeLinejoin:'round'},
+              e('path',{d:'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'})
+            ),
+            e('span',{style:{color:t.a,fontSize:10,fontWeight:700}},'Répondre')
+          )
+        ),
+        e('p',{style:{color:t.text,fontSize:12,margin:0,lineHeight:1.5,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}},msg)
+      )
+    );
+  }
+
+  // ── BILAN ───────────────────────────────────────────────────────
+  bilan(t) {
+    const e=React.createElement;
+    return e('div',{style:{flex:1,overflowY:'auto',paddingTop:2}},
+      e('div',{style:{padding:'2px 18px 12px',display:'flex',justifyContent:'space-between',alignItems:'center'}},
+        e('div',null,
+          e('p',{style:{color:t.sub,fontSize:11,margin:'0 0 2px',fontWeight:500}},'Lundi 9 juin 2025'),
+          e('h1',{style:{color:t.text,fontSize:24,fontWeight:900,margin:0,letterSpacing:-0.8,lineHeight:1.1}},'Bonjour, Antoine 👋')
+        ),
+        e('div',{style:{width:40,height:40,borderRadius:'50%',background:t.a,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:900,fontSize:15}},'A')
+      ),
+      this.coach(t,'Semaine 1 sur 14 · Tu es parti pour Vannes-Auray. La base, c\'est maintenant. 💪'),
+      e('div',{style:{padding:'0 14px',display:'flex',gap:7,marginBottom:10}},
+        ...[{v:'96',u:'j',l:'avant Vannes',c:t.a},{v:'0',u:'%',l:'accompli',c:t.sub},{v:'2',u:'×',l:'séances/sem',c:t.a2}].map((s,i)=>
+          e('div',{key:i,style:{flex:1,background:t.s1,borderRadius:14,padding:'12px 8px',textAlign:'center',border:`1px solid ${t.border}`}},
+            e('div',{style:{display:'flex',alignItems:'baseline',justifyContent:'center',gap:1}},
+              e('span',{style:{color:s.c,fontSize:22,fontWeight:900,letterSpacing:-0.5}},s.v),
+              e('span',{style:{color:s.c,fontSize:12,fontWeight:700}},s.u)
+            ),
+            e('p',{style:{color:t.sub,fontSize:10,margin:'3px 0 0',fontWeight:500}},s.l)
+          )
+        )
+      ),
+      e('div',{style:{margin:'0 14px 10px',background:t.s1,borderRadius:16,padding:'13px 15px',border:`1px solid ${t.border}`}},
+        e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}},
+          e('span',{style:{color:t.text,fontSize:13,fontWeight:700}},'Objectif hebdomadaire'),
+          e('span',{style:{color:t.a,fontSize:13,fontWeight:700}},'0 / 30 km')
+        ),
+        e('div',{style:{background:t.s3,borderRadius:99,height:7,overflow:'hidden'}},
+          e('div',{style:{background:`linear-gradient(90deg,${t.a},${t.a}88)`,height:'100%',width:'2%',borderRadius:99}})
+        ),
+        e('p',{style:{color:t.sub,fontSize:12,margin:'6px 0 0'}},`Programme : 14 semaines · Allure cible 5'41"/km`)
+      ),
+      e('div',{style:{padding:'0 14px 10px'}},'',
+        e('p',{style:{color:t.text,fontSize:12,fontWeight:700,margin:'0 0 9px'}},'Plan de la semaine'),
+        ...[{l:'Mercredi',d:'Endurance fondamentale · 8 km',z:'Z2',c:t.a2},{l:'Samedi',d:'Sortie longue · 12 km',z:'Z1-Z2',c:t.a}].map((w,i)=>
+          e('div',{key:i,style:{background:t.s1,borderRadius:14,padding:'11px 13px',marginBottom:7,border:`1px solid ${t.border}`,display:'flex',alignItems:'center',gap:10}},
+            e('div',{style:{width:40,height:40,borderRadius:11,background:w.c+'22',border:`1px solid ${w.c}33`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
+              this.ic('zap',18,w.c)
+            ),
+            e('div',{style:{flex:1}},
+              e('p',{style:{color:t.sub,fontSize:10,margin:'0 0 2px',fontWeight:600}},w.l),
+              e('p',{style:{color:t.text,fontSize:13,fontWeight:700,margin:0}},w.d)
+            ),
+            e('span',{style:{background:w.c+'22',color:w.c,fontSize:10,padding:'3px 8px',borderRadius:99,fontWeight:700}},w.z)
+          )
+        )
+      )
+    );
+  }
+
+  // ── CONSEILS ────────────────────────────────────────────────────
+  conseils(t) {
+    const e=React.createElement;
+    const tips=[
+      {cat:'Récupération',em:'💆',col:t.a2,title:'8h de sommeil post-sortie longue',desc:'Le sommeil profond déclenche la synthèse protéique. Indispensable après chaque effort intense.'},
+      {cat:'Nutrition',em:'🥑',col:'#F59E0B',title:'Fenêtre anabolique : 30 min post-effort',desc:'20–30g de protéines juste après optimisent la récupération et réduisent l\'inflammation.'},
+      {cat:'Technique',em:'👟',col:t.a,title:'Cadence cible : 180 pas/min',desc:'Augmenter votre fréquence de foulée réduit les impacts au sol et améliore l\'économie de course.'},
+    ];
+    return e('div',{style:{flex:1,overflowY:'auto',paddingTop:2}},
+      e('div',{style:{padding:'2px 18px 12px'}},
+        e('h1',{style:{color:t.text,fontSize:24,fontWeight:900,margin:0,letterSpacing:-0.8}},'Conseils')
+      ),
+      this.coach(t,'3 conseils clés pour cette semaine, adaptés à ta semaine 1 📚'),
+      e('div',{style:{padding:'0 14px 12px',display:'flex',gap:5,overflowX:'auto'}},
+        ...['Tous','Récup','Nutrition','Mental','Technique'].map((c,i)=>
+          e('div',{key:i,style:{padding:'5px 12px',borderRadius:99,fontSize:11,fontWeight:600,flexShrink:0,cursor:'pointer',background:i===0?t.a:t.s2,color:i===0?'white':t.sub,border:`1px solid ${i===0?t.a:t.border}`}},c)
+        )
+      ),
+      e('div',{style:{padding:'0 14px 20px'}},
+        ...tips.map((tip,i)=>
+          e('div',{key:i,style:{background:t.s1,borderRadius:16,padding:'14px 15px',marginBottom:9,border:`1px solid ${t.border}`}},
+            e('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:9}},
+              e('span',{style:{fontSize:16}},tip.em),
+              e('span',{style:{background:tip.col+'22',color:tip.col,fontSize:10,padding:'3px 8px',borderRadius:99,fontWeight:700}},tip.cat),
+              e('div',{style:{marginLeft:'auto',width:20,height:20,borderRadius:'50%',background:t.a,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:9,fontWeight:900}},'M')
+            ),
+            e('p',{style:{color:t.text,fontSize:13,fontWeight:800,margin:'0 0 5px',lineHeight:1.35}},tip.title),
+            e('p',{style:{color:t.sub,fontSize:11,margin:0,lineHeight:1.5}},tip.desc)
+          )
+        )
+      )
+    );
+  }
+
+  // ── GROUPE ──────────────────────────────────────────────────────
+  groupe(t) {
+    const e=React.createElement;
+    const members=[
+      {n:'Sophie L.',km:38.4,av:'S',rank:'🥇'},
+      {n:'Thomas G.',km:31.2,av:'T',rank:'🥈'},
+      {n:'Antoine (moi)',km:0,av:'A',rank:'🥉',me:true},
+      {n:'Pierre M.',km:21.7,av:'P',rank:'4'},
+      {n:'Claire D.',km:18.3,av:'C',rank:'5'},
+    ];
+    return e('div',{style:{flex:1,overflowY:'auto',paddingTop:2}},
+      e('div',{style:{padding:'2px 18px 12px',display:'flex',justifyContent:'space-between',alignItems:'center'}},
+        e('h1',{style:{color:t.text,fontSize:24,fontWeight:900,margin:0,letterSpacing:-0.8}},'Groupe'),
+        e('span',{style:{background:t.as,color:t.a,fontSize:11,padding:'4px 10px',borderRadius:99,fontWeight:700}},'5 membres')
+      ),
+      e('div',{style:{margin:'0 14px 12px',background:`linear-gradient(140deg,${t.a},${t.a}cc)`,borderRadius:18,padding:'16px 18px'}},
+        e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}},
+          e('div',null,
+            e('p',{style:{color:'rgba(255,255,255,0.7)',fontSize:10,margin:'0 0 3px',textTransform:'uppercase',letterSpacing:1,fontWeight:600}},'Défi collectif · Juin'),
+            e('p',{style:{color:'white',fontSize:17,fontWeight:900,margin:0}},'200 km en équipe')
+          ),
+          e('span',{style:{fontSize:26}},'🏆')
+        ),
+        e('div',{style:{background:'rgba(255,255,255,0.25)',borderRadius:99,height:6,marginBottom:6,overflow:'hidden'}},
+          e('div',{style:{background:'white',height:'100%',width:'55%',borderRadius:99}})
+        ),
+        e('div',{style:{display:'flex',justifyContent:'space-between'}},
+          e('span',{style:{color:'rgba(255,255,255,0.9)',fontSize:12,fontWeight:600}},'110 / 200 km'),
+          e('span',{style:{color:'rgba(255,255,255,0.65)',fontSize:11}},'21 jours restants')
+        )
+      ),
+      e('div',{style:{padding:'0 14px 20px'}},
+        e('p',{style:{color:t.text,fontSize:12,fontWeight:700,margin:'0 0 9px'}},'Classement · Cette semaine'),
+        ...members.map((m,i)=>
+          e('div',{key:i,style:{background:m.me?t.as:t.s1,border:`1px solid ${m.me?t.a:t.border}`,borderRadius:13,padding:'10px 13px',marginBottom:7,display:'flex',alignItems:'center',gap:9}},
+            e('span',{style:{fontSize:14,width:22,textAlign:'center',flexShrink:0}},m.rank),
+            e('div',{style:{width:32,height:32,borderRadius:'50%',background:m.me?t.a:t.s2,display:'flex',alignItems:'center',justifyContent:'center',color:m.me?'white':t.text,fontSize:12,fontWeight:800,flexShrink:0}},m.av),
+            e('span',{style:{flex:1,color:t.text,fontSize:12,fontWeight:m.me?700:500}},m.n),
+            e('span',{style:{color:m.me?t.a:t.text,fontSize:13,fontWeight:800}},`${m.km} km`)
+          )
+        )
+      )
+    );
+  }
+
+  // ── RAPPORTS ────────────────────────────────────────────────────
+  rapports(t) {
+    const e=React.createElement;
+    const wks=[{l:'S1',v:0,cur:true},{l:'S2',v:0},{l:'S3',v:0},{l:'S4',v:0},{l:'S5',v:0},{l:'S6',v:0}];
+    const zones=[{z:'Z1 Récup',w:0,c:'#3EFFA3'},{z:'Z2 Endur.',w:0,c:'#60A5FA'},{z:'Z3 Tempo',w:0,c:'#FBBF24'},{z:'Z4 Seuil',w:0,c:'#FB923C'},{z:'Z5 Max',w:0,c:'#F87171'}];
+    return e('div',{style:{flex:1,overflowY:'auto',paddingTop:2}},
+      e('div',{style:{padding:'2px 18px 12px',display:'flex',justifyContent:'space-between',alignItems:'center'}},
+        e('div',null,
+          e('h1',{style:{color:t.text,fontSize:24,fontWeight:900,margin:0,letterSpacing:-0.8}},'Rapports'),
+          e('p',{style:{color:t.sub,fontSize:11,margin:'2px 0 0'}})
+        ),
+        e('div',{style:{display:'flex',gap:4}},
+          ...['Sem.','Mois','Saison'].map((p,i)=>
+            e('div',{key:i,style:{padding:'5px 9px',borderRadius:99,fontSize:10,fontWeight:600,cursor:'pointer',background:i===1?t.a:t.s2,color:i===1?'white':t.sub}},p)
+          )
+        )
+      ),
+      e('div',{style:{margin:'0 14px 10px',background:t.s1,borderRadius:18,padding:'18px 18px',border:`1px solid ${t.border}`}},
+        e('p',{style:{color:t.sub,fontSize:10,margin:'0 0 4px',fontWeight:600,textTransform:'uppercase',letterSpacing:1}},'Distance ce mois'),
+        e('div',{style:{display:'flex',alignItems:'flex-end',gap:4}},
+          e('span',{style:{color:t.text,fontSize:48,fontWeight:900,letterSpacing:-2,lineHeight:1}},'0'),
+          e('span',{style:{color:t.sub,fontSize:18,fontWeight:600,marginBottom:5}},'km')
+        ),
+        e('div',{style:{marginTop:8,display:'flex',gap:8,alignItems:'center'}},
+          e('span',{style:{background:t.a2s,color:t.a2,fontSize:11,padding:'3px 9px',borderRadius:99,fontWeight:700}},'Semaine 1 · début du programme'),
+          e('span',{style:{color:t.sub,fontSize:11}},'0 séance')
+        )
+      ),
+      e('div',{style:{margin:'0 14px 10px',background:t.s1,borderRadius:16,padding:'14px 16px',border:`1px solid ${t.border}`}},
+        e('p',{style:{color:t.text,fontSize:12,fontWeight:700,margin:'0 0 14px'}},'Km / semaine · Programme 14 sem.'),
+        e('div',{style:{display:'flex',gap:4,alignItems:'flex-end',height:90}},
+          ...wks.map((w,i)=>{
+            const h=Math.max(Math.round((w.v/40)*70),4);
+            return e('div',{key:i,style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}},
+              e('span',{style:{color:w.cur?t.a:t.muted,fontSize:9,fontWeight:w.cur?700:400}},w.v||'·'),
+              e('div',{style:{width:'100%',height:h,background:w.cur?`linear-gradient(180deg,${t.a},${t.a}55)`:t.s2,borderRadius:'4px 4px 2px 2px',border:`1px solid ${w.cur?t.a+'55':t.border}`}}),
+              e('span',{style:{color:t.muted,fontSize:9}},w.l)
+            );
+          })
+        )
+      ),
+      e('div',{style:{margin:'0 14px 20px',background:t.s1,borderRadius:16,padding:'14px 16px',border:`1px solid ${t.border}`}},
+        e('p',{style:{color:t.text,fontSize:12,fontWeight:700,margin:'0 0 12px'}},'Zones cardiaques · Mois'),
+        ...zones.map((z,i)=>
+          e('div',{key:i,style:{display:'flex',alignItems:'center',gap:8,marginBottom:7}},
+            e('span',{style:{color:t.sub,fontSize:10,width:66,flexShrink:0}},z.z),
+            e('div',{style:{flex:1,background:t.s3,borderRadius:99,height:5,overflow:'hidden'}},
+              e('div',{style:{background:z.c,height:'100%',width:`${z.w||2}%`,borderRadius:99}})
+            ),
+            e('span',{style:{color:t.sub,fontSize:10,width:24,textAlign:'right'}},`${z.w}%`)
+          )
+        )
+      )
+    );
+  }
+
+  // ── CHECK-IN ────────────────────────────────────────────────────
+  checkin(t) {
+    const e=React.createElement;
+    return e('div',{style:{flex:1,overflowY:'auto',paddingTop:2}},
+      e('div',{style:{padding:'2px 18px 12px'}},
+        e('p',{style:{color:t.sub,fontSize:10,margin:'0 0 3px',fontWeight:600,textTransform:'uppercase',letterSpacing:1}},'Chaque lundi'),
+        e('h1',{style:{color:t.text,fontSize:24,fontWeight:900,margin:0,letterSpacing:-0.8}},'Check-in hebdo')
+      ),
+      this.coach(t,"C'est ta première semaine ! Comment tu te sens avant de démarrer ? 🙌"),
+      e('div',{style:{margin:'0 14px 9px',background:t.s1,borderRadius:16,padding:'13px 14px',border:`1px solid ${t.border}`}},
+        e('p',{style:{color:t.text,fontSize:12,fontWeight:700,margin:'0 0 10px'}},'⚡ Niveau d\'énergie'),
+        e('div',{style:{display:'flex',gap:4}},
+          ...['Épuisé','Fatigué','OK','Bien','Top !'].map((l,i)=>
+            e('div',{key:i,style:{flex:1,padding:'8px 3px',borderRadius:9,textAlign:'center',cursor:'pointer',background:i===4?t.a:t.s2,color:i===4?'white':t.sub,fontSize:10,fontWeight:i===4?700:500,border:`1px solid ${i===4?t.a:t.border}`}},l)
+          )
+        )
+      ),
+      e('div',{style:{margin:'0 14px 9px',background:t.s1,borderRadius:16,padding:'13px 14px',border:`1px solid ${t.border}`}},
+        e('p',{style:{color:t.text,fontSize:12,fontWeight:700,margin:'0 0 10px'}},'🔥 Motivation'),
+        e('div',{style:{display:'flex',gap:4}},
+          ...['😞','😐','🙂','😄','🚀'].map((em,i)=>
+            e('div',{key:i,style:{flex:1,padding:'9px 3px',borderRadius:9,textAlign:'center',fontSize:17,cursor:'pointer',background:i===4?t.as:t.s2,border:`1px solid ${i===4?t.a:t.border}`}},em)
+          )
+        )
+      ),
+      e('div',{style:{margin:'0 14px 9px',background:t.s1,borderRadius:16,padding:'13px 14px',border:`1px solid ${t.border}`}},
+        e('p',{style:{color:t.text,fontSize:12,fontWeight:700,margin:'0 0 10px'}},'🦵 Ressenti physique'),
+        e('div',{style:{display:'flex',flexWrap:'wrap',gap:6}},
+          ...['Jambes lourdes','Douleur genou G.','RAS','Fatigue muscu.','En pleine forme'].map((tag,i)=>
+            e('div',{key:i,style:{padding:'6px 11px',borderRadius:99,fontSize:10,fontWeight:500,cursor:'pointer',background:i===2||i===4?t.as:t.s2,color:i===2||i===4?t.a:t.sub,border:`1px solid ${i===2||i===4?t.a:t.border}`}},tag)
+          )
+        )
+      ),
+      e('div',{style:{margin:'0 14px 10px',background:t.s1,borderRadius:12,padding:'11px 13px',minHeight:52,border:`1px solid ${t.border}`,color:t.muted,fontSize:12}},'Note libre : ressenti, doutes, objectifs…'),
+      e('div',{style:{padding:'0 14px 24px'}},
+        e('div',{style:{background:t.a,borderRadius:13,padding:14,textAlign:'center',color:'white',fontSize:14,fontWeight:800,cursor:'pointer',boxShadow:`0 6px 20px ${t.as}`}},'Envoyer à Marc →')
+      )
+    );
+  }
+
+  // ── CHAT COACH ──────────────────────────────────────────────────
+  chat(t) {
+    const e=React.createElement;
+    const msgs=[
+      {from:'marc',text:"Bonjour Antoine ! Je viens d'analyser ton check-in. Tu te sens au top — parfait pour démarrer la semaine 1 avec énergie.",time:'9:02'},
+      {from:'me',text:"Merci Marc. J'ai une question sur l'allure de mercredi — tu veux que je reste vraiment à 6'30\" même si je me sens bien ?",time:'9:08'},
+      {from:'marc',text:"Oui, absolument. La zone 2 c'est la fondation. Courir trop vite maintenant, c'est hypothéquer les semaines 6 à 10. Fais confiance au processus.",time:'9:09'},
+      {from:'marc',text:"Pour te repérer : tu dois pouvoir parler sans être essoufflé. Si tu as du mal à finir tes phrases, tu vas trop vite. 🎯",time:'9:09'},
+      {from:'me',text:"D'accord, je comprends mieux. Et pour la sortie longue samedi, c'est la même logique ?",time:'9:11'},
+      {from:'marc',text:"Exactement. 12 km en Z1-Z2, allure libre entre 6'15\" et 6'45\". L'objectif c'est juste de mettre du temps sur les jambes sans créer de fatigue résiduelle.",time:'9:12'},
+    ];
+    const quick=['Adapter mon plan','Douleur au genou','Nutrition avant course','Mon allure cible'];
+    return e('div',{style:{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}},
+
+      // Header coach
+      e('div',{style:{padding:'8px 16px 10px',borderBottom:`1px solid ${t.border}`,background:t.s1,flexShrink:0}},
+        e('div',{style:{display:'flex',alignItems:'center',gap:10}},
+          e('div',{style:{position:'relative',flexShrink:0}},
+            e('div',{style:{width:40,height:40,borderRadius:'50%',background:t.a,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:16,fontWeight:900,boxShadow:`0 3px 10px ${t.as}`}},'M'),
+            e('div',{style:{position:'absolute',bottom:1,right:1,width:10,height:10,borderRadius:'50%',background:'#22C55E',border:`2px solid ${t.s1}`}})
+          ),
+          e('div',{style:{flex:1}},
+            e('p',{style:{color:t.text,fontSize:14,fontWeight:800,margin:'0 0 1px',letterSpacing:-0.3}},'Marc'),
+            e('p',{style:{color:'#22C55E',fontSize:11,margin:0,fontWeight:600}},'En ligne · Coach IA Foulée')
+          ),
+          e('div',{style:{display:'flex',gap:8}},
+            e('div',{style:{width:34,height:34,borderRadius:'50%',background:t.s2,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}},
+              e('svg',{width:16,height:16,viewBox:'0 0 24 24',fill:'none',stroke:t.sub,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},
+                e('path',{d:'M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013 5.18 2 2 0 014.99 3h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L9.09 10a16 16 0 006.29 6.29l1.36-1.36a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z'})
+              )
+            )
+          )
+        )
+      ),
+
+      // Messages
+      e('div',{style:{flex:1,overflowY:'auto',padding:'14px 14px 10px',display:'flex',flexDirection:'column',gap:10}},
+        ...msgs.map((m,i)=>{
+          const isMe=m.from==='me';
+          return e('div',{key:i,style:{display:'flex',flexDirection:isMe?'row-reverse':'row',gap:7,alignItems:'flex-end'}},
+            !isMe&&e('div',{style:{width:28,height:28,borderRadius:'50%',background:t.a,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:11,fontWeight:900,flexShrink:0,marginBottom:2}},'M'),
+            e('div',{style:{maxWidth:'75%',display:'flex',flexDirection:'column',gap:2,alignItems:isMe?'flex-end':'flex-start'}},
+              e('div',{style:{
+                background:isMe?t.a:t.s1,
+                color:isMe?'white':t.text,
+                borderRadius:isMe?'18px 18px 4px 18px':'18px 18px 18px 4px',
+                padding:'10px 13px',
+                fontSize:12,lineHeight:1.5,fontWeight:400,
+                border:isMe?'none':`1px solid ${t.border}`,
+                boxShadow:isMe?`0 3px 10px ${t.as}`:'none',
+              }},m.text),
+              e('span',{style:{color:t.muted,fontSize:10,padding:'0 4px'}},m.time)
+            )
+          );
+        }),
+
+        // Typing indicator
+        e('div',{style:{display:'flex',gap:7,alignItems:'flex-end'}},
+          e('div',{style:{width:28,height:28,borderRadius:'50%',background:t.a,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:11,fontWeight:900,flexShrink:0}},'M'),
+          e('div',{style:{background:t.s1,border:`1px solid ${t.border}`,borderRadius:'18px 18px 18px 4px',padding:'12px 16px',display:'flex',gap:4,alignItems:'center'}},
+            ...[0,1,2].map(i=>e('div',{key:i,style:{
+              width:6,height:6,borderRadius:'50%',background:t.muted,
+              animation:'bounce 1.2s ease-in-out infinite',
+              animationDelay:`${i*0.15}s`,
+            }}))
+          )
+        )
+      ),
+
+      // Suggestions rapides
+      e('div',{style:{padding:'8px 14px 6px',display:'flex',gap:6,overflowX:'auto',flexShrink:0}},
+        ...quick.map((q,i)=>
+          e('div',{key:i,style:{padding:'7px 13px',borderRadius:99,fontSize:11,fontWeight:600,flexShrink:0,cursor:'pointer',background:t.s1,color:t.a,border:`1px solid ${t.a}44`,whiteSpace:'nowrap'}},q)
+        )
+      ),
+
+      // Zone de saisie
+      e('div',{style:{padding:'8px 14px 12px',borderTop:`1px solid ${t.border}`,background:t.s1,flexShrink:0}},
+        e('div',{style:{display:'flex',gap:8,alignItems:'center',background:t.s2,borderRadius:99,padding:'8px 8px 8px 16px',border:`1px solid ${t.border}`}},
+          e('span',{style:{flex:1,color:t.muted,fontSize:13}},'Écris à Marc…'),
+          e('div',{style:{display:'flex',gap:6,alignItems:'center'}},
+            e('div',{style:{width:34,height:34,borderRadius:'50%',background:t.s3,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}},
+              e('svg',{width:15,height:15,viewBox:'0 0 24 24',fill:'none',stroke:t.sub,strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},
+                e('path',{d:'M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z'}),
+                e('path',{d:'M19 10v2a7 7 0 01-14 0v-2'}),
+                e('path',{d:'M12 19v4'}),
+                e('path',{d:'M8 23h8'})
+              )
+            ),
+            e('div',{style:{width:34,height:34,borderRadius:'50%',background:t.a,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',boxShadow:`0 3px 10px ${t.as}`}},
+              e('svg',{width:14,height:14,viewBox:'0 0 24 24',fill:'none',stroke:'white',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},
+                e('path',{d:'M22 2L11 13'}),
+                e('path',{d:'M22 2l-7 20-4-9-9-4 20-7z'})
+              )
+            )
+          )
+        )
+      )
+    );
+  }
+
+  // ── Rendu d'un écran ────────────────────────────────────────────
+  screen(t) {
+    const {s}=this.state;
+    if(s===0) return this.bilan(t);
+    if(s===1) return this.conseils(t);
+    if(s===2) return this.groupe(t);
+    if(s===3) return this.rapports(t);
+    if(s===4) return this.checkin(t);
+    if(s===5) return this.chat(t);
+    return null;
+  }
+
+  // ── Téléphone ───────────────────────────────────────────────────
+  phone(t) {
+    const e=React.createElement;
+    return e('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:10}},
+      e('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:4}},
+        e('div',{style:{width:8,height:8,borderRadius:'50%',background:t.a,flexShrink:0}}),
+        e('span',{style:{color:'#EDF0FF',fontSize:13,fontWeight:700,letterSpacing:-0.3,whiteSpace:'nowrap'}},t.label)
+      ),
+      e('div',{style:{
+        width:340,height:680,borderRadius:44,
+        background:t.bg,
+        border:`1px solid ${t.border}`,
+        boxShadow:'0 40px 80px rgba(0,0,0,0.6)',
+        display:'flex',flexDirection:'column',overflow:'hidden',position:'relative',
+      }},
+        this.sb(t),
+        this.screen(t),
+        this.bnav(t),
+        e('div',{style:{height:20,background:t.nav,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
+          e('div',{style:{width:90,height:4,background:t.muted,borderRadius:99}})
+        )
+      )
+    );
+  }
+
+  renderVals() {
+    const e=React.createElement;
+    const {s}=this.state;
+    const t=this.T[1]; // Studio · Jour
+    const nav=e('div',{style:{display:'flex',gap:6,justifyContent:'center',flexWrap:'wrap',marginBottom:4}},
+      ...this.labels.map((l,i)=>
+        e('button',{key:i,onClick:()=>this.setState({s:i}),style:{
+          padding:'8px 20px',borderRadius:99,fontSize:12,fontWeight:i===s?700:500,cursor:'pointer',
+          background:i===s?t.a:'#FFFFFF',color:i===s?'white':'#6E5E55',
+          border:`1px solid ${i===s?t.a:'#DDD7CE'}`,
+          transition:'all 0.15s',
+          boxShadow: i===s?`0 4px 12px ${t.as}`:'none',
+        }},l)
+      )
+    );
+    return {
+      nav,
+      phoneA: this.phone(this.T[1]),
+      phoneB: null,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

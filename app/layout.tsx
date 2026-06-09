@@ -1,8 +1,12 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
-const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
+const jakarta = Plus_Jakarta_Sans({
+  variable: '--font-jakarta',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+})
 
 export const metadata: Metadata = {
   title: 'Foulée – Coach semi-marathon',
@@ -11,8 +15,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${geist.variable} h-full`}>
-      <body className="min-h-full bg-[#FDF8F3] text-[#3D2314] antialiased">
+    <html lang="fr" className={`${jakarta.variable} h-full`}>
+      <body className="min-h-full antialiased" style={{ background: '#F4F0EA', color: '#160E08', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
         {children}
       </body>
     </html>

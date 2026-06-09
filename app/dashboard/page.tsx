@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { Card } from '@/components/ui/Card'
 import { CoachMessage } from '@/components/coach/CoachMessage'
 import { SessionCard } from '@/components/training/SessionCard'
-import { getDaysLeft, getProgramWeek, getProgramWeekStart, getProgressPercent, getWeekStart, formatWeekRange } from '@/lib/utils/dates'
+import {
+  getDaysLeft, getProgramWeek, getProgramWeekStart,
+  getProgressPercent, getWeekStart,
+} from '@/lib/utils/dates'
 import { calcPace } from '@/lib/utils/pace'
 import type { TrainingLog, TrainingProgram, WeeklyReport } from '@/types'
 
@@ -13,109 +14,167 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: profile }, ] = await Promise.all([
+  const [{ data: profile }] = await Promise.all([
     supabase.from('profiles').select('*').eq('user_id', user.id).single(),
   ])
   if (!profile) redirect('/onboarding')
 
-  const programStart = process.env.PROGRAM_START_DATE ?? '2026-06-09'
-  const weekStart = getWeekStart()
-  const weekNumber = Math.max(1, getProgramWeek(programStart))
+  const programStart           = process.env.PROGRAM_START_DATE ?? '2026-06-09'
+  const weekStart              = getWeekStart()
+  const weekNumber             = Math.max(1, getProgramWeek(programStart))
   const currentWeekProgramStart = getProgramWeekStart(programStart, weekNumber)
-  const daysLeft = getDaysLeft()
-  const progressPercent = getProgressPercent(weekNumber)
+  const daysLeft               = getDaysLeft()
+  const progressPercent        = getProgressPercent(weekNumber)
+
+  const nextWeekDate = new Date(new Date(weekStart).getTime() + 7 * 86400000)
 
   const [{ data: currentProgram }, { data: latestReport }, { data: weekLogs }] = await Promise.all([
     supabase
-      .from('training_programs')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('week_start', currentWeekProgramStart)
-      .maybeSingle(),
+      .from('training_programs').select('*')
+      .eq('user_id', user.id).eq('week_start', currentWeekProgramStart).maybeSingle(),
     supabase
-      .from('weekly_reports')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('generated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .from('weekly_reports').select('*')
+      .eq('user_id', user.id).order('generated_at', { ascending: false }).limit(1).maybeSingle(),
     supabase
-      .from('training_logs')
-      .select('*')
+      .from('training_logs').select('*')
       .eq('user_id', user.id)
       .gte('date', weekStart)
-      .lt('date', new Date(new Date(weekStart).getTime() + 7 * 86400000).toISOString().split('T')[0]),
+      .lt('date', nextWeekDate.toISOString().split('T')[0]),
   ])
 
   const program = currentProgram as TrainingProgram | null
-  const report = latestReport as WeeklyReport | null
-  const logs = (weekLogs ?? []) as TrainingLog[]
+  const report  = latestReport  as WeeklyReport | null
+  const logs    = (weekLogs ?? []) as TrainingLog[]
 
-  const totalKm = logs.reduce((s, l) => s + l.distance_km, 0)
-  const totalMin = logs.reduce((s, l) => s + l.duration_minutes, 0)
-  const avgPace = totalKm > 0 ? calcPace(totalKm, totalMin) : '--\'--"'
+  const totalKm        = logs.reduce((s, l) => s + l.distance_km, 0)
+  const totalMin       = logs.reduce((s, l) => s + l.duration_minutes, 0)
+  const avgPace        = totalKm > 0 ? calcPace(totalKm, totalMin) : null
+  const sessionsTarget = program?.sessions?.length ?? profile.weekly_sessions ?? 2
+  const targetKm       = (program as TrainingProgram | null)?.total_volume_km ?? 30
 
-  const defaultCoachMessage = `Bonjour ${profile.first_name} ! Je suis ${profile.coach_name}, ton coach pour Vannes-Auray. Ton programme sur 14 semaines est prêt. On commence cette semaine — chaque sortie compte. Bonne préparation !`
+  // Header date
+  const today     = new Date()
+  const dateLabel = today.toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+  const dateFormatted = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)
+
+  // Coach bubble message
+  const defaultMsg = `Semaine ${weekNumber} sur 14 · On est parti pour Vannes-Auray. La base, c'est maintenant. 💪`
+  const coachMsg   = report?.coach_analysis
+    ? report.coach_analysis.replace(/\n+/g, ' ').slice(0, 130)
+    : defaultMsg
 
   return (
-    <div className="px-4 py-5 flex flex-col gap-5 max-w-lg mx-auto">
-      {/* Welcome card */}
-      <Card>
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h2 className="font-semibold text-lg text-[#3D2314]">Bonjour {profile.first_name} 👋</h2>
-            <p className="text-sm text-[#A07860]">Semaine {weekNumber} sur 14 · {daysLeft} jours avant Vannes-Auray</p>
-          </div>
-          <div className="text-right">
-            <span className="text-2xl font-bold text-[#C1532B]">{daysLeft}</span>
-            <p className="text-xs text-[#A07860]">jours</p>
-          </div>
-        </div>
-        <div className="h-2 bg-[#EEE0D0] rounded-full overflow-hidden">
-          <div
-            className="h-full bg-[#C1532B] rounded-full transition-all"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-        <p className="text-xs text-[#A07860] mt-1">{progressPercent}% du programme accompli</p>
-      </Card>
+    <div style={{ background: '#F4F0EA', minHeight: '100%', paddingTop: 2 }}>
 
-      {/* Coach message */}
-      <CoachMessage
-        coachName={profile.coach_name}
-        content={report?.coach_analysis ?? defaultCoachMessage}
-        date={report ? new Date(report.generated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : undefined}
-      />
-
-      {/* Weekly stats */}
-      <div>
-        <h3 className="text-sm font-medium text-[#A07860] mb-3">Cette semaine · {formatWeekRange(weekStart)}</h3>
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="text-center">
-            <p className="text-2xl font-bold text-[#3D2314]">{totalKm > 0 ? `${totalKm.toFixed(1)}` : '--'}</p>
-            <p className="text-xs text-[#A07860] mt-0.5">km</p>
-          </Card>
-          <Card className="text-center">
-            <p className="text-2xl font-bold text-[#3D2314]">{logs.length > 0 ? logs.length : '--'}</p>
-            <p className="text-xs text-[#A07860] mt-0.5">sorties</p>
-          </Card>
-          <Card className="text-center">
-            <p className="text-xl font-bold text-[#3D2314]">{totalKm > 0 ? avgPace : '--'}</p>
-            <p className="text-xs text-[#A07860] mt-0.5">allure moy.</p>
-          </Card>
+      {/* Header */}
+      <div style={{ padding: '2px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <p style={{ color: '#6E5E55', fontSize: 11, margin: '0 0 2px', fontWeight: 500 }}>{dateFormatted}</p>
+          <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: -0.8, lineHeight: 1.1 }}>
+            Bonjour, {profile.first_name} 👋
+          </h1>
+        </div>
+        <div style={{
+          width: 40, height: 40, borderRadius: '50%', background: '#C5402C',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'white', fontWeight: 900, fontSize: 15, flexShrink: 0,
+        }}>
+          {profile.first_name.charAt(0).toUpperCase()}
         </div>
       </div>
 
-      {/* Planned sessions */}
-      {program && program.sessions.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-[#A07860]">Séances prévues</h3>
-            {program.focus && (
-              <span className="text-xs bg-[#F5EDE4] text-[#A07860] px-2 py-1 rounded-full">{program.focus}</span>
+      {/* Coach Bubble */}
+      <CoachMessage coachName={profile.coach_name} content={coachMsg} />
+
+      {/* Stats 3 colonnes */}
+      <div style={{ padding: '0 14px', display: 'flex', gap: 7, marginBottom: 10 }}>
+        {/* Jours avant course */}
+        <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 1 }}>
+            <span style={{ color: '#C5402C', fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>{daysLeft}</span>
+            <span style={{ color: '#C5402C', fontSize: 12, fontWeight: 700 }}>j</span>
+          </div>
+          <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>avant Vannes</p>
+        </div>
+
+        {/* % accompli */}
+        <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 1 }}>
+            {progressPercent > 0 ? (
+              <>
+                <span style={{ color: '#6E5E55', fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>{progressPercent}</span>
+                <span style={{ color: '#6E5E55', fontSize: 12, fontWeight: 700 }}>%</span>
+              </>
+            ) : (
+              <span style={{ color: '#C5BCAF', fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>--</span>
             )}
           </div>
-          <div className="flex flex-col gap-3">
+          <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>accompli</p>
+        </div>
+
+        {/* Séances/semaine */}
+        <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 1 }}>
+            <span style={{ color: '#2A6B50', fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>{sessionsTarget}</span>
+            <span style={{ color: '#2A6B50', fontSize: 12, fontWeight: 700 }}>×</span>
+          </div>
+          <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>séances/sem</p>
+        </div>
+      </div>
+
+      {/* Objectif hebdomadaire */}
+      <div style={{ margin: '0 14px 10px', background: '#FFFFFF', borderRadius: 16, padding: '13px 15px', border: '1px solid #DDD7CE' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 9 }}>
+          <span style={{ color: '#160E08', fontSize: 13, fontWeight: 700 }}>Objectif hebdomadaire</span>
+          <span style={{ color: '#C5402C', fontSize: 13, fontWeight: 700 }}>
+            {totalKm > 0 ? totalKm.toFixed(1) : '--'} / {targetKm} km
+          </span>
+        </div>
+        <div style={{ background: '#E3DDD5', borderRadius: 99, height: 7, overflow: 'hidden' }}>
+          <div style={{
+            background: 'linear-gradient(90deg, #C5402C, rgba(197,64,44,0.53))',
+            height: '100%',
+            width: totalKm > 0 ? `${Math.min(100, Math.round((totalKm / targetKm) * 100))}%` : '2%',
+            borderRadius: 99,
+            transition: 'width 0.4s ease',
+          }} />
+        </div>
+        <p style={{ color: '#6E5E55', fontSize: 12, margin: '6px 0 0' }}>
+          Programme : 14 semaines · Allure cible 5&apos;41&quot;/km
+        </p>
+      </div>
+
+      {/* Stats semaine */}
+      {logs.length > 0 && (
+        <div style={{ padding: '0 14px', display: 'flex', gap: 7, marginBottom: 10 }}>
+          <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
+            <span style={{ color: '#160E08', fontSize: 20, fontWeight: 900, display: 'block' }}>
+              {totalKm > 0 ? totalKm.toFixed(1) : '--'}
+            </span>
+            <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>km cette sem.</p>
+          </div>
+          <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
+            <span style={{ color: '#160E08', fontSize: 20, fontWeight: 900, display: 'block' }}>
+              {logs.length}
+            </span>
+            <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>sortie{logs.length > 1 ? 's' : ''}</p>
+          </div>
+          <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
+            <span style={{ color: '#160E08', fontSize: 16, fontWeight: 900, display: 'block' }}>
+              {avgPace ?? '--'}
+            </span>
+            <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>allure moy.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Plan de la semaine */}
+      {program && program.sessions.length > 0 && (
+        <div style={{ padding: '0 14px 16px' }}>
+          <p style={{ color: '#160E08', fontSize: 12, fontWeight: 700, margin: '0 0 9px' }}>Plan de la semaine</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {program.sessions.map((session, i) => (
               <SessionCard key={i} session={session} />
             ))}
@@ -123,21 +182,6 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Quick actions */}
-      <div className="flex gap-3">
-        <Link
-          href="/dashboard/log"
-          className="flex-1 py-3 text-center text-sm font-medium bg-[#C1532B] text-[#FDF8F3] rounded-lg hover:bg-[#a8472a] transition-colors"
-        >
-          + Saisir une sortie
-        </Link>
-        <Link
-          href="/dashboard/checkin"
-          className="flex-1 py-3 text-center text-sm font-medium border border-[#EEE0D0] bg-white text-[#A07860] rounded-lg hover:bg-[#F5EDE4] transition-colors"
-        >
-          Check-in semaine
-        </Link>
-      </div>
     </div>
   )
 }

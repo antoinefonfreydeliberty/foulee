@@ -139,54 +139,6 @@ Retourne UNIQUEMENT un JSON valide, sans markdown, sans backticks :
 }`
 }
 
-export const buildEmailPrompt = (params: {
-  profile: Profile
-  coachAnalysis: string
-  stats: { distance: number; sessions: number; avg_pace: string }
-  nextWeekProgram: TrainingSession[]
-  weekNumber: number
-  magicLink: string
-}): string => {
-  const { profile, coachAnalysis, stats, nextWeekProgram, weekNumber, magicLink } = params
-  const daysLeft = getDaysLeft()
-
-  const statsBlock = stats.sessions > 0
-    ? `- Distance totale : ${stats.distance} km\n- Nombre de sorties : ${stats.sessions}\n- Allure moyenne : ${stats.avg_pace}`
-    : 'Pas encore de sorties enregistrées cette semaine.'
-
-  return `Rédige un email HTML pour ${profile.first_name} à partir de ce bilan hebdomadaire.
-
-Bilan du coach :
-${coachAnalysis}
-
-Statistiques de la semaine :
-${statsBlock}
-
-Programme semaine ${weekNumber + 1} :
-${JSON.stringify(nextWeekProgram, null, 2)}
-
-Semaine : ${weekNumber}/14
-Jours restants avant le 13 septembre : ${daysLeft}
-Lien dashboard (magic link) : ${magicLink}
-
-L'email doit contenir dans cet ordre :
-1. Salutation chaleureuse : "Bonjour ${profile.first_name},"
-2. Paragraphe d'analyse (ton ${profile.coach_style}, 3-5 phrases, inspiré du bilan ci-dessus)
-3. Bloc stats visuellement mis en valeur (km / sorties / allure) — si pas de stats, message d'encouragement à la place
-4. Liste des séances prévues la semaine prochaine
-5. Bouton CTA vers le dashboard (utiliser le magic link fourni ci-dessus)
-6. Signature : "${profile.coach_name}" (prénom du coach uniquement)
-
-Contraintes HTML email :
-- Inline styles uniquement (pas de <style>, pas de classes CSS)
-- Compatible tous clients email (Outlook, Gmail, Apple Mail)
-- Palette : terracotta #C1532B, crème #FDF8F3, texte #3D2314, muted #A07860
-- Largeur max 600px, centré
-- Bouton CTA : background #C1532B, color #FDF8F3, border-radius 8px, padding 12px 24px, text-decoration none
-- Pas de DOCTYPE, pas de <html>, pas de <head>, pas de <body>
-- Retourner UNIQUEMENT le HTML du contenu de l'email (les balises internes uniquement)`
-}
-
 export const buildConversationPrompt = (params: {
   profile: Profile
   weekNumber: number

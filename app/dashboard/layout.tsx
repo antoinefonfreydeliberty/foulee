@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -11,16 +10,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('first_name, onboarding_completed')
+    .select('onboarding_completed')
     .eq('user_id', user.id)
     .single()
 
   if (!profile?.onboarding_completed) redirect('/onboarding')
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header firstName={profile.first_name} />
-      <main className="flex-1 pb-20">{children}</main>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#F4F0EA' }}>
+      <main style={{ flex: 1, paddingBottom: 80 }}>{children}</main>
       <BottomNav />
     </div>
   )
