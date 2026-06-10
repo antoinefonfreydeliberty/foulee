@@ -31,7 +31,7 @@ export const CoachMessage = ({ coachName, content }: CoachMessageProps) => {
           width: 36, height: 36, borderRadius: '50%',
           background: '#C5402C',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white', fontSize: 14, fontWeight: 900,
+          color: 'white', fontSize: 14, fontWeight: 800,
           boxShadow: '0 4px 12px rgba(197,64,44,0.10)',
         }}>
           {initial}

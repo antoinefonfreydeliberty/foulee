@@ -127,7 +127,7 @@ export default function ConversationClient({ firstName, coachName, coachStyle, i
             <div style={{
               width: 40, height: 40, borderRadius: '50%', background: '#C5402C',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontSize: 16, fontWeight: 900,
+              color: 'white', fontSize: 16, fontWeight: 800,
               boxShadow: '0 3px 10px rgba(197,64,44,0.10)',
             }}>
               {initial}
@@ -177,7 +177,7 @@ export default function ConversationClient({ firstName, coachName, coachStyle, i
                 <div style={{
                   width: 28, height: 28, borderRadius: '50%', background: '#C5402C',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'white', fontSize: 11, fontWeight: 900, flexShrink: 0, marginBottom: 2,
+                  color: 'white', fontSize: 11, fontWeight: 800, flexShrink: 0, marginBottom: 2,
                 }}>
                   {initial}
                 </div>
@@ -214,7 +214,7 @@ export default function ConversationClient({ firstName, coachName, coachStyle, i
             <div style={{
               width: 28, height: 28, borderRadius: '50%', background: '#C5402C',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontSize: 11, fontWeight: 900, flexShrink: 0,
+              color: 'white', fontSize: 11, fontWeight: 800, flexShrink: 0,
             }}>
               {initial}
             </div>

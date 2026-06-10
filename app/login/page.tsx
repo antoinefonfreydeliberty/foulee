@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/Button'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +12,20 @@ function mapAuthError(message: string): string {
   if (message.includes('Too many requests') || message.includes('rate limit')) return 'Trop de tentatives. Réessaie dans quelques minutes.'
   if (message.includes('Unable to validate') || message.includes('invalid')) return 'Adresse email invalide.'
   return 'Une erreur est survenue. Réessaie.'
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  background: '#EDE8E1',
+  border: '1px solid #DDD7CE',
+  borderRadius: 99,
+  padding: '12px 18px',
+  fontSize: 14,
+  color: '#160E08',
+  outline: 'none',
+  fontFamily: 'inherit',
+  boxSizing: 'border-box',
+  transition: 'border-color 0.15s',
 }
 
 export default function LoginPage() {
@@ -60,7 +73,7 @@ export default function LoginPage() {
     setError('')
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_URL}/auth/callback` },
     })
     if (error) {
       setError(mapAuthError(error.message))
@@ -72,69 +85,110 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="font-serif text-3xl text-[#C1532B] font-bold text-center mb-2">Foulée</h1>
-        <p className="text-center text-[#A07860] text-sm mb-8">
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px 16px', background: '#F4F0EA',
+    }}>
+      <div style={{ width: '100%', maxWidth: 400 }}>
+
+        {/* Logo */}
+        <h1 style={{
+          textAlign: 'center', fontSize: 32, fontWeight: 800, color: '#160E08',
+          letterSpacing: -1, margin: '0 0 8px', fontFamily: 'inherit',
+        }}>
+          Foulée
+        </h1>
+        <p style={{ textAlign: 'center', color: '#6E5E55', fontSize: 14, margin: '0 0 24px' }}>
           Ton coach IA pour Vannes-Auray 2026
         </p>
 
         {sent ? (
-          <div className="bg-[#F5EDE4] rounded-xl p-6 text-center">
-            <p className="text-2xl mb-2">✉️</p>
-            <p className="text-[#3D2314] font-medium">Lien envoyé !</p>
-            <p className="text-[#A07860] text-sm mt-1">
-              Un lien de connexion a été envoyé à <strong>{email}</strong>.<br />Vérifie ta boîte mail.
+          <div style={{
+            background: '#FFFFFF', borderRadius: 16, padding: '28px 24px',
+            border: '1px solid #DDD7CE', textAlign: 'center',
+          }}>
+            <p style={{ fontSize: 28, margin: '0 0 10px' }}>✉️</p>
+            <p style={{ fontSize: 16, fontWeight: 800, color: '#160E08', margin: '0 0 8px' }}>Lien envoyé !</p>
+            <p style={{ color: '#6E5E55', fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+              Un lien de connexion a été envoyé à{' '}
+              <strong style={{ color: '#160E08' }}>{email}</strong>.<br />
+              Vérifie ta boîte mail.
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-[#EEE0D0] p-6">
-            <div className="flex gap-2 mb-5">
-              <button
-                onClick={() => setMode('password')}
-                className={`flex-1 py-2 text-sm rounded-lg border transition-colors ${
-                  mode === 'password'
-                    ? 'border-[#C1532B] bg-[#FDF2EE] text-[#C1532B]'
-                    : 'border-[#EEE0D0] text-[#A07860]'
-                }`}
-              >
-                Mot de passe
-              </button>
-              <button
-                onClick={() => setMode('magic')}
-                className={`flex-1 py-2 text-sm rounded-lg border transition-colors ${
-                  mode === 'magic'
-                    ? 'border-[#C1532B] bg-[#FDF2EE] text-[#C1532B]'
-                    : 'border-[#EEE0D0] text-[#A07860]'
-                }`}
-              >
-                Magic link
-              </button>
+          <div style={{ background: '#FFFFFF', borderRadius: 16, padding: '24px', border: '1px solid #DDD7CE' }}>
+
+            {/* Tabs mode */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+              {(['password', 'magic'] as const).map(m => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  style={{
+                    flex: 1, padding: '10px 8px', fontSize: 13, borderRadius: 10, cursor: 'pointer',
+                    border: `1px solid ${mode === m ? '#C5402C' : '#DDD7CE'}`,
+                    background: mode === m ? 'rgba(197,64,44,0.10)' : '#EDE8E1',
+                    color: mode === m ? '#C5402C' : '#6E5E55',
+                    fontWeight: mode === m ? 700 : 500, transition: 'all 0.15s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {m === 'password' ? 'Mot de passe' : 'Magic link'}
+                </button>
+              ))}
             </div>
 
-            <form onSubmit={mode === 'password' ? handlePasswordLogin : handleMagicLink} className="flex flex-col gap-3">
-              <input
-                type="email"
-                placeholder="ton@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className="w-full border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-[#FDF8F3]"
-              />
-              {mode === 'password' && (
+            <form
+              onSubmit={mode === 'password' ? handlePasswordLogin : handleMagicLink}
+              style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+            >
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#6E5E55' }}>Adresse email</span>
                 <input
-                  type="password"
-                  placeholder="Mot de passe"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  type="email"
+                  placeholder="ton@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
                   required
-                  className="w-full border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-[#FDF8F3]"
+                  style={inputStyle}
                 />
+              </label>
+
+              {mode === 'password' && (
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6E5E55' }}>Mot de passe</span>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    style={inputStyle}
+                  />
+                </label>
               )}
-              {error && <p className="text-red-500 text-xs">{error}</p>}
-              <Button type="submit" disabled={loading} className="w-full mt-1">
-                {loading ? 'Chargement...' : mode === 'password' ? 'Se connecter' : 'Recevoir le lien'}
-              </Button>
+
+              {error && (
+                <p style={{ color: '#C5402C', fontSize: 12, margin: 0 }}>{error}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  background: loading ? '#E3DDD5' : '#C5402C',
+                  color: loading ? '#C5BCAF' : 'white',
+                  borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 800,
+                  border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                  boxShadow: loading ? 'none' : '0 6px 20px rgba(197,64,44,0.10)',
+                  transition: 'all 0.15s', fontFamily: 'inherit', marginTop: 4,
+                }}
+              >
+                {loading
+                  ? 'Chargement…'
+                  : mode === 'password' ? 'Se connecter' : 'Recevoir le lien'}
+              </button>
             </form>
           </div>
         )}

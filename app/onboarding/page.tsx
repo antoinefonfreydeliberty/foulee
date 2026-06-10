@@ -101,7 +101,7 @@ export default function OnboardingPage() {
         <div style={{
           width: 64, height: 64, borderRadius: '50%', background: '#C5402C',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white', fontSize: 24, fontWeight: 900, flexShrink: 0,
+          color: 'white', fontSize: 24, fontWeight: 800, flexShrink: 0,
         }}>
           {form.coach_name.charAt(0)}
         </div>
@@ -129,7 +129,7 @@ export default function OnboardingPage() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '32px 18px', maxWidth: 480, margin: '0 auto', background: '#F4F0EA' }}>
 
       {/* Logo */}
-      <h1 style={{ color: '#C5402C', fontSize: 28, fontWeight: 900, letterSpacing: -1, textAlign: 'center', margin: '0 0 24px' }}>
+      <h1 style={{ color: '#C5402C', fontSize: 28, fontWeight: 800, letterSpacing: -1, textAlign: 'center', margin: '0 0 24px' }}>
         Foulée
       </h1>
 
@@ -152,7 +152,7 @@ export default function OnboardingPage() {
         {step === 1 && (
           <>
             <div>
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
                 Bienvenue dans Foulée
               </h2>
               <p style={{ color: '#6E5E55', fontSize: 13, margin: 0 }}>
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
         {step === 2 && (
           <>
             <div>
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
                 Choisis ton coach
               </h2>
               <p style={{ color: '#6E5E55', fontSize: 13, margin: 0 }}>
@@ -199,7 +199,7 @@ export default function OnboardingPage() {
                   <div style={{
                     width: 40, height: 40, borderRadius: '50%', background: '#C5402C',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: 'white', fontWeight: 900, fontSize: 16, flexShrink: 0,
+                    color: 'white', fontWeight: 800, fontSize: 16, flexShrink: 0,
                   }}>
                     {coach.name.charAt(0)}
                   </div>
@@ -219,7 +219,7 @@ export default function OnboardingPage() {
         {/* Étape 3 */}
         {step === 3 && (
           <>
-            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 4px', letterSpacing: -0.5 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#160E08', margin: '0 0 4px', letterSpacing: -0.5 }}>
               Ton profil de coureur
             </h2>
 
@@ -286,7 +286,7 @@ export default function OnboardingPage() {
         {step === 4 && (
           <>
             <div>
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#160E08', margin: '0 0 6px', letterSpacing: -0.5 }}>
                 Quand es-tu disponible ?
               </h2>
               <p style={{ color: '#6E5E55', fontSize: 13, margin: 0 }}>Sélectionne au moins 2 jours.</p>
@@ -312,7 +312,7 @@ export default function OnboardingPage() {
         {/* Étape 5 */}
         {step === 5 && (
           <>
-            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#160E08', margin: '0 0 4px', letterSpacing: -0.5 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#160E08', margin: '0 0 4px', letterSpacing: -0.5 }}>
               Ton objectif et tes contraintes
             </h2>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

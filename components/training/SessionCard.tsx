@@ -1,19 +1,33 @@
 import type { TrainingSession } from '@/types'
 
-const ZONE_COLORS: Record<string, string> = {
-  endurance:       '#60A5FA',
-  'fractionné':    '#FB923C',
-  'sortie longue': '#2A6B50',
-  récupération:    '#3EFFA3',
-  repos:           '#C5BCAF',
+type ZoneEntry = { label: string; color: string; bg: string }
+
+const SESSION_ZONE_MAP: Record<string, ZoneEntry> = {
+  sortie_longue:          { label: 'Z1-Z2', color: '#C5402C', bg: 'rgba(197,64,44,0.10)' },
+  endurance_fondamentale: { label: 'Z2',    color: '#60A5FA', bg: 'rgba(96,165,250,0.12)' },
+  endurance:              { label: 'Z2',    color: '#60A5FA', bg: 'rgba(96,165,250,0.12)' },
+  interval:               { label: 'Z4',    color: '#FB923C', bg: 'rgba(251,146,60,0.12)' },
+  fractionne:             { label: 'Z4',    color: '#FB923C', bg: 'rgba(251,146,60,0.12)' },
+  tempo:                  { label: 'Z3',    color: '#FBBF24', bg: 'rgba(251,191,36,0.12)' },
+  recuperation:           { label: 'Z1',    color: '#3EFFA3', bg: 'rgba(62,255,163,0.12)' },
+  seuil:                  { label: 'Z4',    color: '#FB923C', bg: 'rgba(251,146,60,0.12)' },
+  vma:                    { label: 'Z5',    color: '#F87171', bg: 'rgba(248,113,113,0.12)' },
+  repos:                  { label: 'Repos', color: '#C5BCAF', bg: 'rgba(197,188,175,0.15)' },
 }
 
-const ZONE_LABELS: Record<string, string> = {
-  endurance:       'Z2',
-  'fractionné':    'Z4',
-  'sortie longue': 'Z1-Z2',
-  récupération:    'Z1',
-  repos:           'Repos',
+function formatType(type: string): string {
+  return type
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase())
+}
+
+function getZone(type: string): ZoneEntry {
+  const normalized = type.toLowerCase().replace(/[éèê]/g, 'e').replace(/[àâ]/g, 'a')
+  return SESSION_ZONE_MAP[normalized] ?? SESSION_ZONE_MAP[type] ?? {
+    label: formatType(type),
+    color: '#C5BCAF',
+    bg: 'rgba(197,188,175,0.15)',
+  }
 }
 
 const ZapIcon = ({ size, color }: { size: number; color: string }) => (
@@ -29,9 +43,8 @@ interface SessionCardProps {
 }
 
 export const SessionCard = ({ session }: SessionCardProps) => {
-  const color     = ZONE_COLORS[session.type] ?? '#C5BCAF'
-  const zoneLabel = ZONE_LABELS[session.type]  ?? session.type
-  const dayLabel  = session.day.charAt(0).toUpperCase() + session.day.slice(1)
+  const zone     = getZone(session.type)
+  const dayLabel = session.day.charAt(0).toUpperCase() + session.day.slice(1)
 
   return (
     <div style={{
@@ -40,10 +53,10 @@ export const SessionCard = ({ session }: SessionCardProps) => {
     }}>
       <div style={{
         width: 40, height: 40, borderRadius: 11,
-        background: color + '22', border: `1px solid ${color}33`,
+        background: zone.bg,
         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>
-        <ZapIcon size={18} color={color} />
+        <ZapIcon size={18} color={zone.color} />
       </div>
 
       <div style={{ flex: 1 }}>
@@ -52,10 +65,10 @@ export const SessionCard = ({ session }: SessionCardProps) => {
       </div>
 
       <span style={{
-        background: color + '22', color, fontSize: 10,
+        background: zone.bg, color: zone.color, fontSize: 10,
         padding: '3px 8px', borderRadius: 99, fontWeight: 700, flexShrink: 0,
       }}>
-        {zoneLabel}
+        {zone.label}
       </span>
     </div>
   )

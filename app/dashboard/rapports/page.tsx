@@ -47,7 +47,7 @@ export default async function RapportsPage() {
       {/* Header */}
       <div style={{ padding: '2px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: -0.8 }}>
+          <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: -0.8 }}>
             Rapports
           </h1>
         </div>
@@ -71,7 +71,7 @@ export default async function RapportsPage() {
           Distance totale
         </p>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
-          <span style={{ color: '#160E08', fontSize: 48, fontWeight: 900, letterSpacing: -2, lineHeight: 1 }}>
+          <span style={{ color: '#160E08', fontSize: 48, fontWeight: 800, letterSpacing: -2, lineHeight: 1 }}>
             {totalDistanceAllTime > 0 ? totalDistanceAllTime.toFixed(1) : '--'}
           </span>
           {totalDistanceAllTime > 0 && (

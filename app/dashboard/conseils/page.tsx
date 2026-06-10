@@ -55,7 +55,7 @@ export default async function ConseilsPage() {
 
       {/* Header */}
       <div style={{ padding: '2px 18px 12px' }}>
-        <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: -0.8 }}>
+        <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: -0.8 }}>
           Conseils
         </h1>
         {weekLabel && (

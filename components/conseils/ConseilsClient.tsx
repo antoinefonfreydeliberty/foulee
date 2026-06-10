@@ -90,7 +90,7 @@ export default function ConseilsClient({
                   <div style={{
                     width: 20, height: 20, borderRadius: '50%', background: '#C5402C',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: 'white', fontSize: 9, fontWeight: 900,
+                    color: 'white', fontSize: 9, fontWeight: 800,
                   }}>
                     {initial}
                   </div>

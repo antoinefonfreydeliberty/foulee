@@ -84,7 +84,7 @@ export const RapportItem = ({ report, coachName }: Props) => {
               <div style={{
                 width: 28, height: 28, borderRadius: '50%', background: '#C5402C',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'white', fontWeight: 900, fontSize: 11,
+                color: 'white', fontWeight: 800, fontSize: 11,
               }}>
                 {initial}
               </div>

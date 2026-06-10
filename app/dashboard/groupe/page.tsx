@@ -58,7 +58,7 @@ export default async function GroupePage() {
 
       {/* Header */}
       <div style={{ padding: '2px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: -0.8 }}>
+        <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: -0.8 }}>
           Groupe
         </h1>
         <span style={{
@@ -80,7 +80,7 @@ export default async function GroupePage() {
             <p style={{ color: 'rgba(255,255,255,0.70)', fontSize: 10, margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
               Défi collectif · Sem. {weekNumber}
             </p>
-            <p style={{ color: 'white', fontSize: 17, fontWeight: 900, margin: 0 }}>
+            <p style={{ color: 'white', fontSize: 17, fontWeight: 800, margin: 0 }}>
               {CHALLENGE_GOAL_KM} km en équipe
             </p>
           </div>

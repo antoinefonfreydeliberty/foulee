@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Button } from '@/components/ui/Button'
 import { calcPace } from '@/lib/utils/pace'
 
 const FEELING_OPTIONS = [
@@ -14,6 +13,25 @@ const FEELING_OPTIONS = [
 
 type Props = {
   firstName: string
+}
+
+const fieldInput: React.CSSProperties = {
+  width: '100%',
+  background: '#EDE8E1',
+  border: '1px solid #DDD7CE',
+  borderRadius: 12,
+  padding: '12px 16px',
+  fontSize: 14,
+  color: '#160E08',
+  outline: 'none',
+  fontFamily: 'inherit',
+  boxSizing: 'border-box',
+}
+
+const fieldLabel: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  color: '#6E5E55',
 }
 
 export default function LogForm({ firstName: _ }: Props) {
@@ -93,26 +111,32 @@ export default function LogForm({ firstName: _ }: Props) {
   }
 
   return (
-    <div className="px-4 py-6 max-w-lg mx-auto">
-      <h1 className="text-xl font-semibold text-[#3D2314] mb-6">Saisir une sortie</h1>
+    <div style={{ padding: '16px 16px 24px', maxWidth: 480, margin: '0 auto' }}>
 
-      <div className="flex flex-col gap-5">
+      <h1 style={{
+        fontSize: 24, fontWeight: 800, color: '#160E08',
+        letterSpacing: -0.8, margin: '0 0 20px',
+      }}>
+        Saisir une sortie
+      </h1>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
         {/* Date */}
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-[#3D2314]">Date de la sortie</span>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={fieldLabel}>Date de la sortie</span>
           <input
             type="date"
             value={form.date}
             max={today}
             onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-            className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white"
+            style={fieldInput}
           />
         </label>
 
         {/* Distance */}
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-[#3D2314]">Distance (km)</span>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={fieldLabel}>Distance (km)</span>
           <input
             type="number"
             min="0"
@@ -120,15 +144,15 @@ export default function LogForm({ firstName: _ }: Props) {
             placeholder="10.5"
             value={form.distanceKm}
             onChange={e => setForm(f => ({ ...f, distanceKm: e.target.value }))}
-            className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white"
+            style={fieldInput}
           />
         </label>
 
         {/* Durée */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-[#3D2314]">Durée</span>
-          <div className="flex gap-2 items-center">
-            <div className="flex-1 flex flex-col gap-1">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={fieldLabel}>Durée</span>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
               <input
                 type="number"
                 min="0"
@@ -136,12 +160,12 @@ export default function LogForm({ firstName: _ }: Props) {
                 placeholder="52"
                 value={form.durationMinutes}
                 onChange={e => setForm(f => ({ ...f, durationMinutes: e.target.value }))}
-                className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white"
+                style={fieldInput}
               />
-              <span className="text-xs text-[#A07860] text-center">min</span>
+              <span style={{ fontSize: 11, color: '#6E5E55', textAlign: 'center' }}>min</span>
             </div>
-            <span className="text-[#A07860] pb-5">:</span>
-            <div className="flex-1 flex flex-col gap-1">
+            <span style={{ color: '#6E5E55', paddingBottom: 20, fontSize: 16, fontWeight: 600 }}>:</span>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
               <input
                 type="number"
                 min="0"
@@ -149,9 +173,9 @@ export default function LogForm({ firstName: _ }: Props) {
                 placeholder="30"
                 value={form.durationSeconds}
                 onChange={e => setForm(f => ({ ...f, durationSeconds: e.target.value }))}
-                className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white"
+                style={fieldInput}
               />
-              <span className="text-xs text-[#A07860] text-center">sec</span>
+              <span style={{ fontSize: 11, color: '#6E5E55', textAlign: 'center' }}>sec</span>
             </div>
           </div>
         </div>
@@ -159,92 +183,107 @@ export default function LogForm({ firstName: _ }: Props) {
         {/* Allure calculée */}
         {pace && (
           <div style={{
-            textAlign: 'center',
-            padding: '12px',
-            backgroundColor: '#F5EDE4',
-            borderRadius: 8,
+            textAlign: 'center', padding: '14px 16px',
+            background: 'rgba(42,107,80,0.10)', borderRadius: 12,
+            border: '1px solid rgba(42,107,80,0.20)',
           }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: '#C1532B' }}>{pace}</p>
-            <p style={{ fontSize: 12, color: '#A07860' }}>par kilomètre</p>
+            <p style={{ fontSize: 28, fontWeight: 800, color: '#2A6B50', margin: '0 0 2px' }}>{pace}</p>
+            <p style={{ fontSize: 12, color: '#2A6B50', margin: 0, fontWeight: 600 }}>par kilomètre</p>
           </div>
         )}
 
         {/* Ressenti */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-[#3D2314]">Ressenti</span>
-          <div className="flex gap-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={fieldLabel}>Ressenti</span>
+          <div style={{ display: 'flex', gap: 6 }}>
             {FEELING_OPTIONS.map(opt => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setForm(f => ({ ...f, feeling: f.feeling === opt.value ? null : opt.value }))}
-                className={`flex-1 flex flex-col items-center py-2.5 gap-1 rounded-lg border transition-colors ${
-                  form.feeling === opt.value
-                    ? 'border-[#C1532B] bg-[#F5EDE4]'
-                    : 'border-[#EEE0D0] bg-white'
-                }`}
+                style={{
+                  flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  padding: '10px 4px', gap: 4, borderRadius: 10, cursor: 'pointer',
+                  border: `1px solid ${form.feeling === opt.value ? '#C5402C' : '#DDD7CE'}`,
+                  background: form.feeling === opt.value ? 'rgba(197,64,44,0.10)' : '#EDE8E1',
+                  transition: 'all 0.15s', fontFamily: 'inherit',
+                }}
               >
-                <span className="text-xl">{opt.emoji}</span>
-                <span className="text-xs text-[#A07860]">{opt.label}</span>
+                <span style={{ fontSize: 18 }}>{opt.emoji}</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 600,
+                  color: form.feeling === opt.value ? '#C5402C' : '#6E5E55',
+                }}>
+                  {opt.label}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Douleur */}
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-[#3D2314]">
-            Douleur ou gêne <span className="text-[#A07860] font-normal">· optionnel</span>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={fieldLabel}>
+            Douleur ou gêne{' '}
+            <span style={{ fontWeight: 400, color: '#C5BCAF' }}>· optionnel</span>
           </span>
           <input
             type="text"
-            placeholder="Douleur, gêne, zone concernée... (optionnel)"
+            placeholder="Douleur, gêne, zone concernée…"
             value={form.painNotes}
             onChange={e => setForm(f => ({ ...f, painNotes: e.target.value }))}
-            className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white"
+            style={fieldInput}
           />
         </label>
 
         {/* Notes */}
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-[#3D2314]">
-            Notes libres <span className="text-[#A07860] font-normal">· optionnel</span>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={fieldLabel}>
+            Notes libres{' '}
+            <span style={{ fontWeight: 400, color: '#C5BCAF' }}>· optionnel</span>
           </span>
           <textarea
-            placeholder="Comment s'est passée cette sortie ? (optionnel)"
+            placeholder="Comment s'est passée cette sortie ?"
             value={form.notes}
             onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
             rows={3}
-            className="border border-[#EEE0D0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C1532B] bg-white resize-none"
+            style={{ ...fieldInput, borderRadius: 12, resize: 'none', paddingTop: 12 }}
           />
         </label>
 
         {error && (
-          <p className="text-sm" style={{ color: '#D4845A' }}>{error}</p>
+          <p style={{ color: '#C5402C', fontSize: 13, margin: 0 }}>{error}</p>
         )}
 
         {success && (
           <div style={{
-            backgroundColor: '#F5EDE4',
-            border: '0.5px solid #EADDD0',
-            borderRadius: 12,
-            padding: '16px 18px',
-            textAlign: 'center',
+            background: 'rgba(42,107,80,0.10)', border: '1px solid rgba(42,107,80,0.20)',
+            borderRadius: 12, padding: '16px 18px', textAlign: 'center',
           }}>
-            <p style={{ fontWeight: 600, color: '#3D2314', marginBottom: 4 }}>Sortie enregistrée !</p>
-            <p style={{ fontSize: 13, color: '#A07860' }}>
+            <p style={{ fontWeight: 700, color: '#2A6B50', margin: '0 0 4px', fontSize: 14 }}>
+              Sortie enregistrée !
+            </p>
+            <p style={{ fontSize: 13, color: '#2A6B50', margin: 0 }}>
               {pace ? `Allure : ${pace}/km · ` : ''}{dist.toFixed(1)} km
             </p>
           </div>
         )}
 
-        <Button
+        <button
           onClick={handleSubmit}
           disabled={!isValid || loading}
-          className="w-full mt-2"
+          style={{
+            width: '100%',
+            background: isValid && !loading ? '#C5402C' : '#E3DDD5',
+            color: isValid && !loading ? 'white' : '#C5BCAF',
+            borderRadius: 13, padding: '14px', fontSize: 14, fontWeight: 800,
+            border: 'none', cursor: isValid && !loading ? 'pointer' : 'not-allowed',
+            boxShadow: isValid ? '0 6px 20px rgba(197,64,44,0.10)' : 'none',
+            transition: 'all 0.15s', fontFamily: 'inherit', marginTop: 4,
+          }}
         >
-          {loading ? 'Enregistrement...' : 'Enregistrer la sortie'}
-        </Button>
+          {loading ? 'Enregistrement…' : 'Enregistrer la sortie'}
+        </button>
 
       </div>
     </div>

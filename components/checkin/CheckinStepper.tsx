@@ -107,7 +107,7 @@ export default function CheckinStepper({ firstName, coachName }: Props) {
           <div style={{
             width: 64, height: 64, borderRadius: '50%', background: '#C5402C',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontWeight: 900, fontSize: 24,
+            color: 'white', fontWeight: 800, fontSize: 24,
           }}>
             {initial}
           </div>
@@ -117,7 +117,7 @@ export default function CheckinStepper({ firstName, coachName }: Props) {
             background: '#22C55E', border: '2px solid #F4F0EA',
           }} />
         </div>
-        <p style={{ fontSize: 20, fontWeight: 900, color: '#160E08', margin: 0 }}>
+        <p style={{ fontSize: 20, fontWeight: 800, color: '#160E08', margin: 0 }}>
           Merci {firstName} !
         </p>
         <p style={{ fontSize: 14, color: '#6E5E55', lineHeight: 1.6, margin: 0 }}>
@@ -147,7 +147,7 @@ export default function CheckinStepper({ firstName, coachName }: Props) {
         <p style={{ color: '#6E5E55', fontSize: 10, margin: '0 0 3px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
           Chaque lundi
         </p>
-        <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: -0.8 }}>
+        <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: -0.8 }}>
           Check-in hebdo
         </h1>
       </div>
@@ -163,7 +163,7 @@ export default function CheckinStepper({ firstName, coachName }: Props) {
           <div style={{
             width: 36, height: 36, borderRadius: '50%', background: '#C5402C',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontSize: 14, fontWeight: 900,
+            color: 'white', fontSize: 14, fontWeight: 800,
           }}>
             {initial}
           </div>

@@ -72,14 +72,14 @@ export default async function DashboardPage() {
       <div style={{ padding: '2px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <p style={{ color: '#6E5E55', fontSize: 11, margin: '0 0 2px', fontWeight: 500 }}>{dateFormatted}</p>
-          <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: -0.8, lineHeight: 1.1 }}>
+          <h1 style={{ color: '#160E08', fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: -0.8, lineHeight: 1.1 }}>
             Bonjour, {profile.first_name} 👋
           </h1>
         </div>
         <div style={{
           width: 40, height: 40, borderRadius: '50%', background: '#C5402C',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white', fontWeight: 900, fontSize: 15, flexShrink: 0,
+          color: 'white', fontWeight: 800, fontSize: 15, flexShrink: 0,
         }}>
           {profile.first_name.charAt(0).toUpperCase()}
         </div>
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
         {/* Jours avant course */}
         <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 1 }}>
-            <span style={{ color: '#C5402C', fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>{daysLeft}</span>
+            <span style={{ color: '#C5402C', fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>{daysLeft}</span>
             <span style={{ color: '#C5402C', fontSize: 12, fontWeight: 700 }}>j</span>
           </div>
           <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>avant Vannes</p>
@@ -104,11 +104,11 @@ export default async function DashboardPage() {
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 1 }}>
             {progressPercent > 0 ? (
               <>
-                <span style={{ color: '#6E5E55', fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>{progressPercent}</span>
+                <span style={{ color: '#6E5E55', fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>{progressPercent}</span>
                 <span style={{ color: '#6E5E55', fontSize: 12, fontWeight: 700 }}>%</span>
               </>
             ) : (
-              <span style={{ color: '#C5BCAF', fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>--</span>
+              <span style={{ color: '#C5BCAF', fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>--</span>
             )}
           </div>
           <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>accompli</p>
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
         {/* Séances/semaine */}
         <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 1 }}>
-            <span style={{ color: '#2A6B50', fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>{sessionsTarget}</span>
+            <span style={{ color: '#2A6B50', fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>{sessionsTarget}</span>
             <span style={{ color: '#2A6B50', fontSize: 12, fontWeight: 700 }}>×</span>
           </div>
           <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>séances/sem</p>
@@ -150,19 +150,19 @@ export default async function DashboardPage() {
       {logs.length > 0 && (
         <div style={{ padding: '0 14px', display: 'flex', gap: 7, marginBottom: 10 }}>
           <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
-            <span style={{ color: '#160E08', fontSize: 20, fontWeight: 900, display: 'block' }}>
+            <span style={{ color: '#160E08', fontSize: 20, fontWeight: 800, display: 'block' }}>
               {totalKm > 0 ? totalKm.toFixed(1) : '--'}
             </span>
             <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>km cette sem.</p>
           </div>
           <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
-            <span style={{ color: '#160E08', fontSize: 20, fontWeight: 900, display: 'block' }}>
+            <span style={{ color: '#160E08', fontSize: 20, fontWeight: 800, display: 'block' }}>
               {logs.length}
             </span>
             <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>sortie{logs.length > 1 ? 's' : ''}</p>
           </div>
           <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 14, padding: '12px 8px', textAlign: 'center', border: '1px solid #DDD7CE' }}>
-            <span style={{ color: '#160E08', fontSize: 16, fontWeight: 900, display: 'block' }}>
+            <span style={{ color: '#160E08', fontSize: 16, fontWeight: 800, display: 'block' }}>
               {avgPace ?? '--'}
             </span>
             <p style={{ color: '#6E5E55', fontSize: 10, margin: '3px 0 0', fontWeight: 500 }}>allure moy.</p>
