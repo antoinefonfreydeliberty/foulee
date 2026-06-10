@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export const dynamic = 'force-dynamic'
@@ -29,43 +28,12 @@ const inputStyle: React.CSSProperties = {
 }
 
 export default function LoginPage() {
-  const router = useRouter()
   const supabase = createClient()
 
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [mode, setMode] = useState<'password' | 'magic'>('password')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
-
-  const handlePasswordLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(mapAuthError(error.message))
-      setLoading(false)
-      return
-    }
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('user_id', user.id)
-        .single()
-
-      if (!profile?.onboarding_completed) {
-        router.push('/onboarding')
-      } else {
-        router.push('/dashboard')
-      }
-    }
-    setLoading(false)
-  }
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,29 +85,8 @@ export default function LoginPage() {
           </div>
         ) : (
           <div style={{ background: '#FFFFFF', borderRadius: 16, padding: '24px', border: '1px solid #DDD7CE' }}>
-
-            {/* Tabs mode */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-              {(['password', 'magic'] as const).map(m => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  style={{
-                    flex: 1, padding: '10px 8px', fontSize: 13, borderRadius: 10, cursor: 'pointer',
-                    border: `1px solid ${mode === m ? '#C5402C' : '#DDD7CE'}`,
-                    background: mode === m ? 'rgba(197,64,44,0.10)' : '#EDE8E1',
-                    color: mode === m ? '#C5402C' : '#6E5E55',
-                    fontWeight: mode === m ? 700 : 500, transition: 'all 0.15s',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  {m === 'password' ? 'Mot de passe' : 'Magic link'}
-                </button>
-              ))}
-            </div>
-
             <form
-              onSubmit={mode === 'password' ? handlePasswordLogin : handleMagicLink}
+              onSubmit={handleMagicLink}
               style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
             >
               <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -153,20 +100,6 @@ export default function LoginPage() {
                   style={inputStyle}
                 />
               </label>
-
-              {mode === 'password' && (
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6E5E55' }}>Mot de passe</span>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    style={inputStyle}
-                  />
-                </label>
-              )}
 
               {error && (
                 <p style={{ color: '#C5402C', fontSize: 12, margin: 0 }}>{error}</p>
@@ -185,9 +118,7 @@ export default function LoginPage() {
                   transition: 'all 0.15s', fontFamily: 'inherit', marginTop: 4,
                 }}
               >
-                {loading
-                  ? 'Chargement…'
-                  : mode === 'password' ? 'Se connecter' : 'Recevoir le lien'}
+                {loading ? 'Chargement…' : 'Recevoir le lien'}
               </button>
             </form>
           </div>
