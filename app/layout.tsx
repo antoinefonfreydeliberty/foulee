@@ -9,7 +9,7 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Foulée – Coach semi-marathon',
+  title: 'Foulée',
   description: 'Ton coach IA personnel pour le semi-marathon Vannes-Auray',
   manifest: '/manifest.json',
   appleWebApp: {
