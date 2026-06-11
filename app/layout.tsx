@@ -26,9 +26,6 @@ export function generateViewport() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${jakarta.variable} h-full`}>
-      <head>
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v2.png" />
-      </head>
       <body className="min-h-full antialiased" style={{ background: '#F4F0EA', color: '#160E08', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
         {children}
       </body>
