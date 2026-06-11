@@ -7,9 +7,14 @@ export const anthropic = new Anthropic({
 export const MODEL = 'claude-sonnet-4-6'
 
 export const extractJSON = (text: string): unknown => {
-  const match = text.match(/\{[\s\S]*\}/)
+  // Strip markdown code fences if present
+  const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+  const match = stripped.match(/\{[\s\S]*\}/)
   if (!match) throw new Error('No JSON found in Claude response')
-  return JSON.parse(match[0])
+  // Remove trailing commas before } or ] to tolerate LLM formatting quirks
+  const cleaned = match[0].replace(/,(\s*[}\]])/g, '$1')
+  console.error('[onboarding] raw claude response:', match[0])
+  return JSON.parse(cleaned)
 }
 
 export async function callClaudeWithRetry<T>(

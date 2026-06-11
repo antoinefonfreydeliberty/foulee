@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     const result = await callClaudeWithRetry(async () => {
       const msg = await anthropic.messages.create({
         model: MODEL,
-        max_tokens: 4000,
+        max_tokens: 8192,
         temperature: 0.7,
         system: buildSystemPrompt(profile),
         messages: [{ role: 'user', content: buildInitialProgramPrompt(profile, startDate) }],
