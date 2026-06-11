@@ -7,14 +7,66 @@ export const anthropic = new Anthropic({
 export const MODEL = 'claude-sonnet-4-6'
 
 export const extractJSON = (text: string): unknown => {
-  // Strip markdown code fences if present
-  const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
-  const match = stripped.match(/\{[\s\S]*\}/)
-  if (!match) throw new Error('No JSON found in Claude response')
-  // Remove trailing commas before } or ] to tolerate LLM formatting quirks
-  const cleaned = match[0].replace(/,(\s*[}\]])/g, '$1')
-  console.error('[onboarding] raw claude response:', match[0])
-  return JSON.parse(cleaned)
+  let content = text.trim()
+
+  // Étape 1 : extraire le contenu depuis les code fences,
+  // qu'elles soient au début ou précédées de texte
+  const fenceMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  if (fenceMatch) {
+    content = fenceMatch[1].trim()
+  }
+
+  // Étape 2 : trouver le premier objet JSON complet
+  // (ne pas être greedy jusqu'au DERNIER })
+  // On cherche { ou [, puis on compte les profondeurs
+  const startObj = content.indexOf('{')
+  const startArr = content.indexOf('[')
+  const start =
+    startObj === -1 ? startArr
+    : startArr === -1 ? startObj
+    : Math.min(startObj, startArr)
+
+  if (start === -1) {
+    throw new Error('No JSON found in Claude response')
+  }
+
+  const openChar = content[start]
+  const closeChar = openChar === '{' ? '}' : ']'
+  let depth = 0
+  let inString = false
+  let escape = false
+  let end = -1
+
+  for (let i = start; i < content.length; i++) {
+    const c = content[i]
+    if (escape)        { escape = false; continue }
+    if (c === '\\' && inString) { escape = true; continue }
+    if (c === '"')     { inString = !inString; continue }
+    if (inString)      continue
+    if (c === openChar) depth++
+    if (c === closeChar) {
+      depth--
+      if (depth === 0) { end = i; break }
+    }
+  }
+
+  if (end === -1) {
+    throw new Error('Truncated JSON in Claude response (unbalanced brackets)')
+  }
+
+  let extracted = content.slice(start, end + 1)
+
+  // Étape 3 : nettoyer les artefacts LLM courants
+  extracted = extracted.replace(/\/\/[^\n\r]*/g, '')        // commentaires //
+  extracted = extracted.replace(/\/\*[\s\S]*?\*\//g, '')    // commentaires /* */
+  extracted = extracted.replace(/,(\s*[}\]])/g, '$1')        // trailing commas
+
+  try {
+    return JSON.parse(extracted)
+  } catch (err) {
+    console.error('[extractJSON] JSON.parse failed. First 500 chars:', extracted.slice(0, 500))
+    throw err
+  }
 }
 
 export async function callClaudeWithRetry<T>(
