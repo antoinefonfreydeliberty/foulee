@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -9,6 +10,13 @@ type Props = {
   coachName: string
   coachStyle: string
   initialHistory: { role: string; content: string; created_at: string }[]
+}
+
+const markdownComponents = {
+  p:  ({ children }: { children?: React.ReactNode }) => <p  style={{ margin: '0 0 4px 0' }}>{children}</p>,
+  ul: ({ children }: { children?: React.ReactNode }) => <ul style={{ margin: '4px 0', paddingLeft: 18 }}>{children}</ul>,
+  ol: ({ children }: { children?: React.ReactNode }) => <ol style={{ margin: '4px 0', paddingLeft: 18 }}>{children}</ol>,
+  li: ({ children }: { children?: React.ReactNode }) => <li style={{ margin: '2px 0' }}>{children}</li>,
 }
 
 const QUICK_SUGGESTIONS = [
@@ -195,10 +203,13 @@ export default function ConversationClient({ firstName, coachName, coachStyle, i
                   minHeight:     isStreamingThis && !msg.content ? 20 : 'auto',
                 }}>
                   {msg.content ? (
-                    <>
-                      {msg.content}
-                      {isStreamingThis && <span style={{ opacity: 0.5, marginLeft: 2 }}>▊</span>}
-                    </>
+                    isMe ? (
+                      msg.content
+                    ) : (
+                      <ReactMarkdown components={markdownComponents}>
+                        {isStreamingThis ? msg.content + ' ▊' : msg.content}
+                      </ReactMarkdown>
+                    )
                   ) : isStreamingThis ? (
                     <span style={{ opacity: 0.4 }}>…</span>
                   ) : null}
