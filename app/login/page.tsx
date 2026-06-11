@@ -8,17 +8,6 @@ export const dynamic = 'force-dynamic'
 
 const COOLDOWN_SECONDS = 30
 
-function mapSendError(message: string): string {
-  if (message.toLowerCase().includes('invalid')) return 'Adresse email invalide.'
-  return 'Impossible d\'envoyer le code. Réessayez.'
-}
-
-function mapVerifyError(message: string): string {
-  if (message.toLowerCase().includes('expired')) return 'Ce code a expiré. Demandez-en un nouveau.'
-  if (message.toLowerCase().includes('invalid') || message.toLowerCase().includes('incorrect')) return 'Code invalide. Vérifiez et réessayez.'
-  return 'Une erreur est survenue. Réessayez.'
-}
-
 const cardStyle: React.CSSProperties = {
   background: 'var(--surface-1)',
   borderRadius: 16,
@@ -122,13 +111,15 @@ export default function LoginPage() {
   const sendOtp = async (): Promise<boolean> => {
     setLoading(true)
     setError('')
-    const { error: sendError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
+    const res = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     })
+    const data = await res.json()
     setLoading(false)
-    if (sendError) {
-      setError(mapSendError(sendError.message))
+    if (!res.ok) {
+      setError(data.error ?? "Impossible d'envoyer le code. Réessayez.")
       return false
     }
     startCooldown()
@@ -145,16 +136,31 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      email,
-      token: code,
-      type: 'email',
+
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
     })
-    if (verifyError) {
-      setError(mapVerifyError(verifyError.message))
+    const data = await res.json()
+
+    if (!res.ok) {
+      setError(data.error ?? 'Une erreur est survenue. Réessayez.')
       setLoading(false)
       return
     }
+
+    const { error: sessionError } = await supabase.auth.verifyOtp({
+      token_hash: data.token_hash,
+      type: 'magiclink',
+    })
+
+    if (sessionError) {
+      setError('Erreur de session. Réessayez.')
+      setLoading(false)
+      return
+    }
+
     router.push('/dashboard')
   }
 
@@ -240,8 +246,8 @@ export default function LoginPage() {
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={8}
-                  placeholder="00000000"
+                  maxLength={6}
+                  placeholder="000000"
                   value={code}
                   onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
                   autoFocus
@@ -263,8 +269,8 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={loading || code.length < 8}
-                style={primaryBtnStyle(loading || code.length < 8)}
+                disabled={loading || code.length < 6}
+                style={primaryBtnStyle(loading || code.length < 6)}
               >
                 {loading ? 'Vérification...' : 'Se connecter'}
               </button>
