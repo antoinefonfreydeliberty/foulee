@@ -10,11 +10,16 @@ const HomeSvg = () => (
   </svg>
 )
 
-const BulbSvg = () => (
+const PenLineSvg = () => (
   <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18h6"/>
-    <path d="M10 22h4"/>
-    <path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2h-4a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/>
+    <path d="M12 20h9"/>
+    <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/>
+  </svg>
+)
+
+const MessageCircleSvg = () => (
+  <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/>
   </svg>
 )
 
@@ -37,7 +42,8 @@ const BarChartSvg = () => (
 
 const tabs = [
   { href: '/dashboard', label: 'Bilan', Icon: HomeSvg },
-  { href: '/dashboard/conseils', label: 'Conseils', Icon: BulbSvg },
+  { href: '/dashboard/log', label: 'Journal', Icon: PenLineSvg },
+  { href: '/dashboard/conversation', label: 'Coach', Icon: MessageCircleSvg },
   { href: '/dashboard/groupe', label: 'Groupe', Icon: UsersSvg },
   { href: '/dashboard/rapports', label: 'Rapports', Icon: BarChartSvg },
 ]
