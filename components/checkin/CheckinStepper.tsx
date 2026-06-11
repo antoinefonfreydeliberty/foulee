@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { calcPace } from '@/lib/utils/pace'
 
 const ENERGY_OPTIONS = [
   { label: 'Épuisé',  value: 1 },
@@ -27,13 +28,32 @@ const PHYSICAL_OPTIONS = [
   { label: 'En pleine forme', pain: 0 },
 ]
 
+const FEELING_OPTIONS = [
+  { value: 1, emoji: '😓', label: 'Épuisé' },
+  { value: 2, emoji: '😕', label: 'Difficile' },
+  { value: 3, emoji: '😐', label: 'Correct' },
+  { value: 4, emoji: '😊', label: 'Bien' },
+  { value: 5, emoji: '🔥', label: 'Super' },
+]
+
+const DAYS_FR = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+
+type UnsavedSession = {
+  id: number
+  dayDate: string
+  distanceKm: string
+  durationMinutes: string
+  feeling: number | null
+}
+
 type Props = {
   firstName: string
   coachName: string
   coachStyle: string
+  weekStart: string
 }
 
-export default function CheckinStepper({ firstName, coachName }: Props) {
+export default function CheckinStepper({ firstName, coachName, weekStart }: Props) {
   const [energyScore,      setEnergyScore]      = useState<number | null>(null)
   const [motivationScore,  setMotivationScore]  = useState<number | null>(null)
   const [physicalTags,     setPhysicalTags]     = useState<string[]>([])
@@ -42,7 +62,28 @@ export default function CheckinStepper({ firstName, coachName }: Props) {
   const [loading,          setLoading]          = useState(false)
   const [error,            setError]            = useState<string | null>(null)
 
+  const [hasUnlogged,      setHasUnlogged]      = useState(false)
+  const [unloggedSessions, setUnloggedSessions] = useState<UnsavedSession[]>([])
+  const [nextId,           setNextId]           = useState(0)
+
   const initial = coachName.charAt(0).toUpperCase()
+
+  // Build the 7 days of the current week as local dates (avoids UTC timezone shift)
+  const weekDays = useMemo(() => {
+    const [year, month, day] = weekStart.split('-').map(Number)
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(year, month - 1, day + i)
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const monthLabel = d.toLocaleDateString('fr-FR', { month: 'long' })
+      return { value: iso, label: `${DAYS_FR[i]} ${d.getDate()} ${monthLabel}` }
+    })
+  }, [weekStart])
+
+  const defaultDay = useMemo(() => {
+    const now = new Date()
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    return weekDays.some(d => d.value === todayStr) ? todayStr : weekDays[6].value
+  }, [weekDays])
 
   const togglePhysical = (label: string) => {
     setPhysicalTags(prev =>
@@ -56,6 +97,23 @@ export default function CheckinStepper({ firstName, coachName }: Props) {
       return Math.max(max, opt?.pain ?? 0)
     }, 0)
     return maxPain as 0 | 1 | 2
+  }
+
+  const addSession = () => {
+    if (unloggedSessions.length >= 5) return
+    setUnloggedSessions(prev => [
+      ...prev,
+      { id: nextId, dayDate: defaultDay, distanceKm: '', durationMinutes: '', feeling: null },
+    ])
+    setNextId(n => n + 1)
+  }
+
+  const removeSession = (id: number) => {
+    setUnloggedSessions(prev => prev.filter(s => s.id !== id))
+  }
+
+  const updateSession = (id: number, updates: Partial<UnsavedSession>) => {
+    setUnloggedSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
   }
 
   const canSubmit = energyScore !== null
@@ -89,6 +147,36 @@ export default function CheckinStepper({ firstName, coachName }: Props) {
       setError(body.error ?? 'Une erreur est survenue. Réessaie.')
       setLoading(false)
       return
+    }
+
+    // Save unlogged sessions — don't block submission if individual inserts fail
+    if (hasUnlogged) {
+      for (const s of unloggedSessions) {
+        const dist = parseFloat(s.distanceKm)
+        const mins = parseInt(s.durationMinutes)
+        if (!dist || dist <= 0 || !mins || mins <= 0) continue
+        try {
+          const r = await fetch('/api/training-log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              date: s.dayDate,
+              distanceKm: dist,
+              durationMinutes: mins,
+              pacePerKm: calcPace(dist, mins),
+              feeling: s.feeling,
+              painNotes: null,
+              notes: null,
+            }),
+          })
+          if (!r.ok) {
+            const body = await r.json().catch(() => ({}))
+            console.error('[checkin] training-log insert failed', body.error)
+          }
+        } catch (err) {
+          console.error('[checkin] training-log insert failed', err)
+        }
+      }
     }
 
     setSubmitted(true)
@@ -264,6 +352,177 @@ export default function CheckinStepper({ firstName, coachName }: Props) {
             resize: 'none', fontFamily: 'inherit', lineHeight: 1.5,
           }}
         />
+      </div>
+
+      {/* Sorties non encore notées */}
+      <div style={{ margin: '0 14px 9px', background: '#FFFFFF', borderRadius: 16, padding: '13px 14px', border: '1px solid #DDD7CE' }}>
+        <p style={{ color: '#160E08', fontSize: 12, fontWeight: 700, margin: '0 0 10px' }}>
+          🏃 As-tu des sorties non encore notées cette semaine ?
+        </p>
+        <div style={{ display: 'flex', gap: 4, marginBottom: hasUnlogged ? 14 : 0 }}>
+          {([{ label: 'Non', value: false }, { label: 'Oui', value: true }] as const).map(opt => (
+            <button
+              key={String(opt.value)}
+              onClick={() => {
+                setHasUnlogged(opt.value)
+                if (!opt.value) {
+                  setUnloggedSessions([])
+                } else if (unloggedSessions.length === 0) {
+                  addSession()
+                }
+              }}
+              style={{
+                flex: 1, padding: '8px 3px', borderRadius: 9, textAlign: 'center',
+                cursor: 'pointer', fontSize: 10, transition: 'all 0.15s',
+                fontWeight: hasUnlogged === opt.value ? 700 : 500,
+                background: hasUnlogged === opt.value ? '#C5402C' : '#EDE8E1',
+                color:      hasUnlogged === opt.value ? 'white'   : '#6E5E55',
+                border:     `1px solid ${hasUnlogged === opt.value ? '#C5402C' : '#DDD7CE'}`,
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {hasUnlogged && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {unloggedSessions.map(s => {
+              const dist = parseFloat(s.distanceKm)
+              const mins = parseInt(s.durationMinutes)
+              const pace = dist > 0 && mins > 0 ? calcPace(dist, mins) : null
+
+              return (
+                <div key={s.id} style={{
+                  background: '#EDE8E1', borderRadius: 12, padding: '11px 12px',
+                  border: '1px solid #DDD7CE', position: 'relative',
+                }}>
+                  <button
+                    onClick={() => removeSession(s.id)}
+                    style={{
+                      position: 'absolute', top: 8, right: 10,
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: '#C5BCAF', fontSize: 18, lineHeight: 1, padding: 2,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    ×
+                  </button>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 20 }}>
+                    {/* Jour */}
+                    <div>
+                      <p style={{ fontSize: 10, fontWeight: 600, color: '#6E5E55', margin: '0 0 4px' }}>Jour</p>
+                      <select
+                        value={s.dayDate}
+                        onChange={e => updateSession(s.id, { dayDate: e.target.value })}
+                        style={{
+                          width: '100%', background: '#FFFFFF', border: '1px solid #DDD7CE',
+                          borderRadius: 9, padding: '8px 10px', fontSize: 12, color: '#160E08',
+                          fontFamily: 'inherit', outline: 'none',
+                        }}
+                      >
+                        {weekDays.map(d => (
+                          <option key={d.value} value={d.value}>{d.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Distance + Durée */}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 10, fontWeight: 600, color: '#6E5E55', margin: '0 0 4px' }}>Distance (km)</p>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          placeholder="10.5"
+                          value={s.distanceKm}
+                          onChange={e => updateSession(s.id, { distanceKm: e.target.value })}
+                          style={{
+                            width: '100%', background: '#FFFFFF', border: '1px solid #DDD7CE',
+                            borderRadius: 9, padding: '8px 10px', fontSize: 12, color: '#160E08',
+                            fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 10, fontWeight: 600, color: '#6E5E55', margin: '0 0 4px' }}>Durée (min)</p>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="52"
+                          value={s.durationMinutes}
+                          onChange={e => updateSession(s.id, { durationMinutes: e.target.value })}
+                          style={{
+                            width: '100%', background: '#FFFFFF', border: '1px solid #DDD7CE',
+                            borderRadius: 9, padding: '8px 10px', fontSize: 12, color: '#160E08',
+                            fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Allure calculée */}
+                    {pace && (
+                      <div style={{
+                        textAlign: 'center', padding: '6px 10px',
+                        background: 'rgba(42,107,80,0.10)', borderRadius: 9,
+                        border: '1px solid rgba(42,107,80,0.20)',
+                      }}>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: '#2A6B50' }}>{pace}</span>
+                        <span style={{ fontSize: 10, color: '#2A6B50', fontWeight: 600, marginLeft: 4 }}>/km</span>
+                      </div>
+                    )}
+
+                    {/* Ressenti */}
+                    <div>
+                      <p style={{ fontSize: 10, fontWeight: 600, color: '#6E5E55', margin: '0 0 4px' }}>Ressenti</p>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {FEELING_OPTIONS.map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => updateSession(s.id, { feeling: s.feeling === opt.value ? null : opt.value })}
+                            style={{
+                              flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                              padding: '6px 2px', gap: 2, borderRadius: 8, cursor: 'pointer',
+                              border: `1px solid ${s.feeling === opt.value ? '#C5402C' : '#DDD7CE'}`,
+                              background: s.feeling === opt.value ? 'rgba(197,64,44,0.10)' : '#FFFFFF',
+                              transition: 'all 0.15s', fontFamily: 'inherit',
+                            }}
+                          >
+                            <span style={{ fontSize: 14 }}>{opt.emoji}</span>
+                            <span style={{
+                              fontSize: 9, fontWeight: 600,
+                              color: s.feeling === opt.value ? '#C5402C' : '#6E5E55',
+                            }}>
+                              {opt.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            {unloggedSessions.length < 5 && (
+              <button
+                onClick={addSession}
+                style={{
+                  width: '100%', padding: '10px', borderRadius: 10, textAlign: 'center',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
+                  background: 'transparent', color: '#C5402C',
+                  border: '1px dashed #C5402C', fontFamily: 'inherit',
+                }}
+              >
+                + Ajouter une séance
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {error && (

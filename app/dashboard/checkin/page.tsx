@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import CheckinStepper from '@/components/checkin/CheckinStepper'
+import { getProgramWeek, getProgramWeekStart } from '@/lib/utils/dates'
 
 export default async function CheckinPage() {
   const supabase = await createClient()
@@ -15,11 +16,16 @@ export default async function CheckinPage() {
 
   if (!profile) redirect('/onboarding')
 
+  const programStart = process.env.PROGRAM_START_DATE ?? '2026-06-09'
+  const weekNumber = getProgramWeek(programStart)
+  const weekStart = getProgramWeekStart(programStart, weekNumber)
+
   return (
     <CheckinStepper
       firstName={profile.first_name}
       coachName={profile.coach_name}
       coachStyle={profile.coach_style}
+      weekStart={weekStart}
     />
   )
 }
