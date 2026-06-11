@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next'
+import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
@@ -12,9 +12,6 @@ export const metadata: Metadata = {
   title: 'Foulée',
   description: 'Ton coach IA personnel pour le semi-marathon Vannes-Auray',
   manifest: '/manifest.json',
-  icons: {
-    apple: '/icon-180.png',
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -22,16 +19,15 @@ export const metadata: Metadata = {
   },
 }
 
-export const viewport: Viewport = {
-  themeColor: '#C5402C',
+export function generateViewport() {
+  return { themeColor: '#C5402C' }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${jakarta.variable} h-full`}>
       <head>
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v2.png" />
       </head>
       <body className="min-h-full antialiased" style={{ background: '#F4F0EA', color: '#160E08', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
         {children}
