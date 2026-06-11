@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { calcPace } from '@/lib/utils/pace'
+import type { TrainingLog } from '@/types'
 
 const FEELING_OPTIONS = [
   { value: 1, emoji: '😓', label: 'Épuisé' },
@@ -11,8 +12,18 @@ const FEELING_OPTIONS = [
   { value: 5, emoji: '🔥', label: 'Super' },
 ]
 
+const FEELING_EMOJI: Record<number, string> = { 1: '😓', 2: '😕', 3: '😐', 4: '😊', 5: '🔥' }
+
+const formatLogDate = (dateStr: string): string => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const d = new Date(year, month - 1, day)
+  const result = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  return result.charAt(0).toUpperCase() + result.slice(1)
+}
+
 type Props = {
   firstName: string
+  logs?: TrainingLog[]
 }
 
 const fieldInput: React.CSSProperties = {
@@ -34,7 +45,7 @@ const fieldLabel: React.CSSProperties = {
   color: '#6E5E55',
 }
 
-export default function LogForm({ firstName: _ }: Props) {
+export default function LogForm({ firstName: _, logs = [] }: Props) {
   const today = new Date().toISOString().split('T')[0]
 
   const [form, setForm] = useState({
@@ -286,6 +297,62 @@ export default function LogForm({ firstName: _ }: Props) {
         </button>
 
       </div>
+
+      {/* Historique des sorties */}
+      <div style={{ marginTop: 32 }}>
+        <h2 style={{
+          fontSize: 18, fontWeight: 800, color: '#160E08',
+          letterSpacing: -0.5, margin: '0 0 12px',
+        }}>
+          Mes sorties ({logs.length})
+        </h2>
+
+        {logs.length === 0 ? (
+          <p style={{ fontSize: 13, color: '#6E5E55', margin: 0 }}>
+            Aucune sortie enregistrée pour l&apos;instant.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {logs.map(log => (
+              <div key={log.id} style={{
+                background: '#FFFFFF', border: '1px solid #DDD7CE',
+                borderRadius: 12, padding: '12px 14px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: '#6E5E55', margin: '0 0 4px' }}>
+                      {formatLogDate(log.date)}
+                    </p>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: '#160E08' }}>
+                        {log.distance_km > 0
+                          ? log.distance_km.toFixed(1).replace('.', ',') + ' km'
+                          : '--'}
+                      </span>
+                      {log.pace_per_km && (
+                        <span style={{ fontSize: 12, color: '#6E5E55', fontWeight: 600 }}>
+                          {log.pace_per_km}/km
+                        </span>
+                      )}
+                    </div>
+                    {log.pain_notes && (
+                      <p style={{ fontSize: 11, color: '#C5402C', margin: '4px 0 0', fontWeight: 500 }}>
+                        {log.pain_notes}
+                      </p>
+                    )}
+                  </div>
+                  {log.feeling != null && (
+                    <span style={{ fontSize: 22, lineHeight: 1 }}>
+                      {FEELING_EMOJI[log.feeling] ?? ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
