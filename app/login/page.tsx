@@ -235,13 +235,13 @@ export default function LoginPage() {
               </p>
 
               <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <span style={labelTextStyle}>Code à 6 chiffres</span>
+                <span style={labelTextStyle}>Code de connexion</span>
                 <input
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={6}
-                  placeholder="000000"
+                  maxLength={8}
+                  placeholder="00000000"
                   value={code}
                   onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
                   autoFocus
@@ -263,8 +263,8 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={loading || code.length < 6}
-                style={primaryBtnStyle(loading || code.length < 6)}
+                disabled={loading || code.length < 8}
+                style={primaryBtnStyle(loading || code.length < 8)}
               >
                 {loading ? 'Vérification...' : 'Se connecter'}
               </button>
