@@ -3,7 +3,46 @@ import { createClient } from '@/lib/supabase/server'
 import { anthropic, MODEL } from '@/lib/claude/client'
 import { buildSystemPrompt, buildConversationPrompt } from '@/lib/claude/prompts'
 import { getProgramWeek, getProgramWeekStart } from '@/lib/utils/dates'
+import { calcPace } from '@/lib/utils/pace'
 import type { CoachConversation, Profile, TrainingSession } from '@/types'
+
+type RawLog = { date: string; distance_km: number; duration_minutes: number }
+
+function buildTrainingHistorySummary(
+  logs: RawLog[],
+  weekNumber: number,
+  programStart: string
+): string {
+  if (!logs || logs.length === 0) return 'Aucune sortie enregistrée récemment.'
+
+  const fmt = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' })
+  const summaries: string[] = []
+
+  for (let offset = 3; offset >= 0; offset--) {
+    const wNum = weekNumber - offset
+    if (wNum < 1) continue
+
+    const wStart = getProgramWeekStart(programStart, wNum)
+    const wStartDate = new Date(wStart + 'T00:00:00')
+    const wEndDate = new Date(wStartDate)
+    wEndDate.setDate(wEndDate.getDate() + 6)
+    const wEnd = wEndDate.toISOString().split('T')[0]
+
+    const weekLogs = logs.filter(l => l.date >= wStart && l.date <= wEnd)
+    if (weekLogs.length === 0) continue
+
+    const totalKm = weekLogs.reduce((sum, l) => sum + (l.distance_km ?? 0), 0)
+    const totalMins = weekLogs.reduce((sum, l) => sum + (l.duration_minutes ?? 0), 0)
+    const avgPace = totalKm > 0 && totalMins > 0 ? calcPace(totalKm, totalMins) : '--'
+    const sessions = weekLogs.length
+
+    summaries.push(
+      `Semaine ${wNum} (${fmt.format(wStartDate)}-${fmt.format(wEndDate)}) : ${totalKm > 0 ? totalKm.toFixed(1) : '--'} km, ${sessions} séance${sessions > 1 ? 's' : ''}, allure moy ${avgPace}/km`
+    )
+  }
+
+  return summaries.length > 0 ? summaries.join('\n') : 'Aucune sortie enregistrée récemment.'
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,8 +67,10 @@ export async function POST(req: NextRequest) {
     const programStart = process.env.PROGRAM_START_DATE ?? '2026-06-09'
     const weekNumber = Math.max(1, getProgramWeek(programStart))
     const currentWeekStart = getProgramWeekStart(programStart, weekNumber)
+    const lookbackWeekNumber = Math.max(1, weekNumber - 3)
+    const lookbackStart = getProgramWeekStart(programStart, lookbackWeekNumber)
 
-    const [{ data: history }, { data: checkin }, { data: program }] = await Promise.all([
+    const [{ data: history }, { data: checkin }, { data: program }, { data: logsData }] = await Promise.all([
       supabase
         .from('coach_conversations')
         .select('*')
@@ -49,10 +90,21 @@ export async function POST(req: NextRequest) {
         .eq('user_id', user.id)
         .eq('week_start', currentWeekStart)
         .maybeSingle(),
+      supabase
+        .from('training_logs')
+        .select('date, distance_km, duration_minutes')
+        .eq('user_id', user.id)
+        .gte('date', lookbackStart)
+        .order('date', { ascending: true }),
     ])
 
     const messages = (history ?? []) as CoachConversation[]
     const currentSessions = (program?.sessions ?? []) as TrainingSession[]
+    const trainingHistory = buildTrainingHistorySummary(
+      (logsData ?? []) as RawLog[],
+      weekNumber,
+      programStart
+    )
 
     await supabase.from('coach_conversations').insert({
       user_id: user.id,
@@ -71,6 +123,7 @@ export async function POST(req: NextRequest) {
       feelingScore: checkin?.feeling_score ?? null,
       painNotes: checkin?.pain_notes ?? null,
       currentWeekProgram: currentSessions,
+      trainingHistory,
       userMessage: message.trim(),
     })
 

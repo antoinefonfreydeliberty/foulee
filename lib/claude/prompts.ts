@@ -145,15 +145,17 @@ export const buildConversationPrompt = (params: {
   feelingScore: number | null
   painNotes: string | null
   currentWeekProgram: TrainingSession[]
+  trainingHistory?: string
   userMessage: string
 }): string => {
-  const { profile, weekNumber, feelingScore, painNotes, currentWeekProgram, userMessage } = params
+  const { profile, weekNumber, feelingScore, painNotes, currentWeekProgram, trainingHistory, userMessage } = params
 
   return `Contexte récent de ${profile.first_name} :
 - Semaine ${weekNumber} sur 14
 - Dernier ressenti (check-in) : ${feelingScore ? `${feelingScore}/5` : 'non renseigné'}
 - Douleurs signalées : ${painNotes ?? 'aucune'}
 - Programme en cours : ${JSON.stringify(currentWeekProgram)}
+${trainingHistory ? `- Historique d'entraînement (4 dernières semaines) :\n${trainingHistory}` : ''}
 
 Question de ${profile.first_name} : ${userMessage}
 
