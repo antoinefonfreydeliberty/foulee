@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       model: MODEL,
       max_tokens: 800,
       temperature: 0.7,
-      system: buildSystemPrompt(profile),
+      system: buildSystemPrompt(profile, programStart),
       messages: conversationHistory,
     })
 

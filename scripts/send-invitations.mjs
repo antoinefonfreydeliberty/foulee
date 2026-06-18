@@ -8,9 +8,7 @@ dotenv.config({ path: resolve(__dirname, '../.env.local') })
 
 // ─── RENSEIGNER ICI ───────────────────────────────────────────────────────────
 const INVITEES = [
-  { name: 'Hugo',  email: 'EMAIL_HUGO_ICI' },
-  { name: 'Rémi',  email: 'EMAIL_REMI_ICI' },
-  { name: 'Alix',  email: 'EMAIL_ALIX_ICI' },
+  { name: 'Rémi', email: 'remi.baillot@tutamail.com' },
 ]
 const APP_URL = 'https://www.foulee.run'
 // ─────────────────────────────────────────────────────────────────────────────

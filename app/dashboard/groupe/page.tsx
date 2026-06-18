@@ -1,12 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
-import { getProgramWeek, getWeekStart, getWeekEnd, getDaysLeft } from '@/lib/utils/dates'
+import { getProgramWeek, getProgramWeekStart, getWeekEnd, getDaysLeft } from '@/lib/utils/dates'
 import { calcPace } from '@/lib/utils/pace'
 
 type ProfileRow = { user_id: string; first_name: string }
 type LogRow     = { user_id: string; distance_km: number; duration_minutes: number }
-
-const CHALLENGE_GOAL_KM = 200
 
 export default async function GroupePage() {
   const supabase = await createClient()
@@ -17,14 +15,21 @@ export default async function GroupePage() {
 
   const programStart = process.env.PROGRAM_START_DATE ?? '2026-06-09'
   const weekNumber   = Math.max(1, getProgramWeek(programStart))
-  const weekStart    = getWeekStart()
+  const weekStart    = getProgramWeekStart(programStart, weekNumber)
   const weekEnd      = getWeekEnd(weekStart)
   const daysLeft     = getDaysLeft()
 
-  const [profilesResult, logsResult] = await Promise.all([
+  const [profilesResult, logsResult, programsResult] = await Promise.all([
     admin.from('profiles').select('user_id, first_name').eq('onboarding_completed', true),
     admin.from('training_logs').select('user_id, distance_km, duration_minutes').gte('date', weekStart).lte('date', weekEnd),
+    admin.from('training_programs').select('total_volume_km').eq('week_start', weekStart),
   ])
+
+  const programs = (programsResult.data ?? []) as Array<{ total_volume_km: string | number | null }>
+  const CHALLENGE_GOAL_KM = Math.max(
+    programs.reduce((sum, p) => sum + Number(p.total_volume_km ?? 0), 0),
+    1
+  )
 
   const profiles = ((profilesResult.data ?? []) as ProfileRow[])
   const logs     = ((logsResult.data ?? []) as LogRow[])

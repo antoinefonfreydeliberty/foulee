@@ -8,9 +8,9 @@ const STYLE_INSTRUCTIONS: Record<CoachStyle, string> = {
   playful: "Ton style est enthousiaste, motivant et légèrement décontracté. Tu utilises des formulations dynamiques. Tu célèbres les petites victoires. Tu rappelles souvent la course à venir pour créer de l'excitation.",
 }
 
-export const buildSystemPrompt = (profile: Profile): string => {
+export const buildSystemPrompt = (profile: Profile, startDate?: string): string => {
   const daysLeft = getDaysLeft()
-  const weekNumber = getProgramWeek()
+  const weekNumber = getProgramWeek(startDate ?? process.env.PROGRAM_START_DATE)
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   return `Tu es ${profile.coach_name}, le coach personnel de ${profile.first_name}.
@@ -91,10 +91,26 @@ export const buildWeeklyReportPrompt = (params: {
   const { profile, weekNumber, plannedSessions, actualLogs, checkin, recentHistory, nextWeekPlanned, nextWeekNumber } = params
   const noData = actualLogs.length === 0 && !checkin
 
+  const totalActualKm = (actualLogs as Array<{ distance_km?: number }>)
+    .reduce((s, l) => s + (l.distance_km ?? 0), 0)
+  const totalPlannedKm = plannedSessions
+    .reduce((s, sess) => s + (sess.distance_km ?? 0), 0)
+  const ecartKm = totalActualKm - totalPlannedKm
+  const ecartLabel = ecartKm >= 0
+    ? `+${ecartKm.toFixed(1)} km (au-dessus du programme)`
+    : `${ecartKm.toFixed(1)} km (en dessous du programme)`
+  const comparisonLine = totalPlannedKm > 0
+    ? `Volume planifie : ${totalPlannedKm} km | Volume realise : ${totalActualKm.toFixed(1)} km | Ecart : ${ecartLabel}`
+    : 'Pas de programme defini pour cette semaine.'
+
   return `Analyse de la semaine ${weekNumber}/14 pour ${profile.first_name}.
 
 PROGRAMME PRÉVU CETTE SEMAINE :
 ${plannedSessions.length > 0 ? JSON.stringify(plannedSessions, null, 2) : 'Non disponible'}
+
+STATISTIQUES DE LA SEMAINE (pre-calcule — utilise ces chiffres, ne recalcule pas) :
+${comparisonLine}
+Sorties planifiees : ${plannedSessions.length} | Sorties realisees : ${(actualLogs as unknown[]).length}
 
 SORTIES RÉALISÉES (training_logs) :
 ${actualLogs.length > 0 ? JSON.stringify(actualLogs, null, 2) : 'Aucune sortie enregistrée cette semaine.'}
@@ -119,7 +135,7 @@ Rédige un message d'encouragement et de bienvenue dans le programme plutôt qu'
 
 Retourne UNIQUEMENT un JSON valide, sans markdown, sans backticks :
 {
-  "coach_analysis": "Texte bilan 3-5 paragraphes. Commence par ce qui s'est bien passé (ou par un accueil chaleureux si première semaine). Aborde les points d'attention sans culpabiliser. Termine en projetant vers la semaine suivante. Jamais de ton militaire.",
+  "coach_analysis": "Texte bilan 3-5 paragraphes. Utilise UNIQUEMENT les statistiques pre-calculees fournies dans le contexte (volume planifie, volume realise, ecart). Ne recalcule jamais les totaux toi-meme. Commence par ce qui s'est bien passe (ou par un accueil chaleureux si premiere semaine). Aborde les points d'attention sans culpabiliser. Termine en projetant vers la semaine suivante. Jamais de ton militaire. N'utilise jamais de tiret cadratins (—) : remplace-les par des virgules, des parentheses ou des tirets simples (-).",
   "coach_tips": [
     { "category": "Nutrition", "tip": "Conseil personnalisé court." },
     { "category": "Récupération", "tip": "Conseil personnalisé court." },
@@ -160,6 +176,6 @@ ${trainingHistory ? `- Historique d'entraînement (4 dernières semaines) :\n${t
 Question de ${profile.first_name} : ${userMessage}
 
 Réponds en restant dans ton style ${profile.coach_style}. Sois concis et actionnable.
-Si la question porte sur une douleur, n'aggrave pas l'inquiétude, donne un conseil pratique, et recommande un médecin si la douleur est sévère ou persistante.`
+Si la question porte sur une douleur, n'aggrave pas l'inquiétude, donne un conseil pratique, et recommande un médecin si la douleur est sévère ou persistante.
+Regle de style : n'utilise jamais de tirets cadratins (—). Remplace-les par des virgules, des parentheses ou des tirets simples (-).`
 }
-"N'utilise jamais de tirets cadratin (—). Utilise des virgules, des parenthèses ou des tirets simples (-) à la place."

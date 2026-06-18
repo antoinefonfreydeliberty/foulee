@@ -4,7 +4,7 @@ import { anthropic, MODEL, extractJSON, callClaudeWithRetry } from '@/lib/claude
 import { buildSystemPrompt, buildWeeklyReportPrompt } from '@/lib/claude/prompts'
 import { sendWeeklyEmail } from '@/lib/brevo/client'
 import { buildEmailHtml } from '@/lib/brevo/email-builder'
-import { getDaysLeft, getProgramWeek, getWeekStart } from '@/lib/utils/dates'
+import { getDaysLeft, getProgramWeek, getProgramWeekStart } from '@/lib/utils/dates'
 import { calcPace } from '@/lib/utils/pace'
 import type { Profile, TrainingSession } from '@/types'
 
@@ -30,8 +30,11 @@ export async function GET(req: NextRequest) {
 
   for (const profile of profiles as Profile[]) {
     try {
-      const weekStart = getWeekStart()
-      const weekNumber = Math.max(1, getProgramWeek())
+      const programStart = process.env.PROGRAM_START_DATE!
+      const weekNumber = Math.max(1, getProgramWeek(programStart))
+      const weekStart = getProgramWeekStart(programStart, weekNumber)
+      const nextWeekNumber = Math.min(weekNumber + 1, 14)
+      const nextWeekStart = getProgramWeekStart(programStart, nextWeekNumber)
 
       // Idempotence: skip if email already sent this week
       const { data: existingReport } = await supabase
@@ -46,10 +49,6 @@ export async function GET(req: NextRequest) {
         skipped.push(profile.first_name)
         continue
       }
-
-      const nextWeekDate = new Date(new Date(weekStart).getTime() + 7 * 86400000)
-      const nextWeekStart = nextWeekDate.toISOString().split('T')[0]
-      const nextWeekNumber = Math.min(weekNumber + 1, 14)
 
       const [
         { data: currentProgram },
@@ -75,7 +74,7 @@ export async function GET(req: NextRequest) {
           model: MODEL,
           max_tokens: 2000,
           temperature: 0.7,
-          system: buildSystemPrompt(profile),
+          system: buildSystemPrompt(profile, process.env.PROGRAM_START_DATE),
           messages: [{
             role: 'user',
             content: buildWeeklyReportPrompt({
