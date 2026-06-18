@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: 'Foulée',
   description: 'Ton coach IA personnel pour le semi-marathon Vannes-Auray',
   manifest: '/manifest.json',
+  icons: {
+    apple: '/apple-icon-v2.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
