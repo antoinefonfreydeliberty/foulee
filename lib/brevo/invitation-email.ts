@@ -91,7 +91,7 @@ export function buildInvitationEmail({
       <tr>
         <td style="padding:8px 0;vertical-align:top;border-bottom:1px solid #EDE8E1;">
           <p style="color:#160E08;font-size:14px;font-weight:700;margin:0 0 2px;">Chat avec ton coach</p>
-          <p style="color:#6E5E55;font-size:13px;margin:0;line-height:1.5;">Entraînement, récup, nutrition, motivation — à tout moment</p>
+          <p style="color:#6E5E55;font-size:13px;margin:0;line-height:1.5;">Entraînement, récup, nutrition, motivation - à tout moment</p>
         </td>
       </tr>
       <tr>

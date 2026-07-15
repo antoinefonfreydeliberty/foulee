@@ -149,7 +149,7 @@ export default function CheckinStepper({ firstName, coachName, weekStart }: Prop
       return
     }
 
-    // Save unlogged sessions — don't block submission if individual inserts fail
+    // Save unlogged sessions - don't block submission if individual inserts fail
     if (hasUnlogged) {
       for (const s of unloggedSessions) {
         const dist = parseFloat(s.distanceKm)

@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const profile = { ...profileData, id: '', created_at: '' } as Profile
     const startDate = process.env.PROGRAM_START_DATE ?? getWeekStart()
 
-    // Appel Claude — toute erreur remonte au catch global
+    // Appel Claude - toute erreur remonte au catch global
     const result = await callClaudeWithRetry(async () => {
       const msg = await anthropic.messages.create({
         model: MODEL,

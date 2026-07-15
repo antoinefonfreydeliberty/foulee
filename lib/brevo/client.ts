@@ -17,7 +17,7 @@ export const sendWeeklyEmail = async ({ to, toName, coachName, htmlContent, week
       name: `${coachName} via Foulée`,
     },
     to: [{ email: to, name: toName }],
-    subject: `Semaine ${weekNumber} – Ton bilan de la semaine, ${toName}`,
+    subject: `Semaine ${weekNumber} - Ton bilan de la semaine, ${toName}`,
     htmlContent,
   })
 }

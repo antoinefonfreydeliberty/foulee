@@ -108,7 +108,7 @@ export const buildWeeklyReportPrompt = (params: {
 PROGRAMME PRÉVU CETTE SEMAINE :
 ${plannedSessions.length > 0 ? JSON.stringify(plannedSessions, null, 2) : 'Non disponible'}
 
-STATISTIQUES DE LA SEMAINE (pre-calcule — utilise ces chiffres, ne recalcule pas) :
+STATISTIQUES DE LA SEMAINE (pre-calcule, utilise ces chiffres, ne recalcule pas) :
 ${comparisonLine}
 Sorties planifiees : ${plannedSessions.length} | Sorties realisees : ${(actualLogs as unknown[]).length}
 
@@ -135,7 +135,7 @@ Rédige un message d'encouragement et de bienvenue dans le programme plutôt qu'
 
 Retourne UNIQUEMENT un JSON valide, sans markdown, sans backticks :
 {
-  "coach_analysis": "Texte bilan 3-5 paragraphes. Utilise UNIQUEMENT les statistiques pre-calculees fournies dans le contexte (volume planifie, volume realise, ecart). Ne recalcule jamais les totaux toi-meme. Commence par ce qui s'est bien passe (ou par un accueil chaleureux si premiere semaine). Aborde les points d'attention sans culpabiliser. Termine en projetant vers la semaine suivante. Jamais de ton militaire. N'utilise jamais de tiret cadratins (—) : remplace-les par des virgules, des parentheses ou des tirets simples (-).",
+  "coach_analysis": "Texte bilan 3-5 paragraphes. Utilise UNIQUEMENT les statistiques pre-calculees fournies dans le contexte (volume planifie, volume realise, ecart). Ne recalcule jamais les totaux toi-meme. L'email commence deja par une salutation 'Bonjour ${profile.first_name},' : ne repete PAS cette salutation et ne commence pas ton texte par le prenom. N'ecris le prenom '${profile.first_name}' qu'une seule fois au maximum dans les deux premiers paragraphes, et jamais deux fois a moins de ~50 mots d'intervalle ; ne le reutilise ensuite que si le contexte l'exige vraiment (rare). Commence par ce qui s'est bien passe (ou par un accueil chaleureux si premiere semaine). Aborde les points d'attention sans culpabiliser. Termine en projetant vers la semaine suivante. Jamais de ton militaire. N'utilise JAMAIS de tiret cadratin (—) ni de tiret demi-cadratin (–) : remplace-les par des virgules, des parentheses ou un tiret simple (-), et evite les tirets autant que possible.",
   "coach_tips": [
     { "category": "Nutrition", "tip": "Conseil personnalisé court." },
     { "category": "Récupération", "tip": "Conseil personnalisé court." },
@@ -177,5 +177,5 @@ Question de ${profile.first_name} : ${userMessage}
 
 Réponds en restant dans ton style ${profile.coach_style}. Sois concis et actionnable.
 Si la question porte sur une douleur, n'aggrave pas l'inquiétude, donne un conseil pratique, et recommande un médecin si la douleur est sévère ou persistante.
-Regle de style : n'utilise jamais de tirets cadratins (—). Remplace-les par des virgules, des parentheses ou des tirets simples (-).`
+Regle de style : n'utilise JAMAIS de tiret cadratin (—) ni de tiret demi-cadratin (–). Remplace-les par des virgules, des parentheses ou un tiret simple (-), et evite les tirets autant que possible.`
 }

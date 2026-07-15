@@ -49,6 +49,13 @@ function escapeHtml(str: string): string {
     .replace(/'/g,  '&#39;')
 }
 
+// Filet de sécurité : le prompt Claude interdit déjà les tirets cadratins/demi-cadratins,
+// mais on nettoie défensivement le texte IA avant insertion pour garantir qu'aucun
+// tiret cadratin (—) ou demi-cadratin (–) ne subsiste dans l'email final.
+function sanitizeDashes(str: string): string {
+  return str.replace(/[–—]/g, '-').replace(/&(?:mdash|ndash|#8211|#8212);/g, '-')
+}
+
 function analysisToHtml(text: string): string {
   return text
     .split(/\n{2,}/)
@@ -87,22 +94,34 @@ function renderSession(session: TrainingSession, nextWeekStart: string): string 
 }
 
 // ---------------------------------------------------------------------------
-// Main builder — selects template based on whether stats exist
+// Main builder - selects template based on whether stats exist
 // ---------------------------------------------------------------------------
 
 export function buildEmailHtml(p: EmailParams): string {
   const hasStats  = p.stats.sessions > 0
+  // Message d'accueil « semaine blanche » : réservé à la VRAIE semaine 1 sans données.
+  // Au-delà (ex. semaine 5 sans séance loggée), une semaine à 0 séance ne doit jamais
+  // prétendre que le programme démarre — texte neutre à la place.
+  const isWelcomeWeek = !hasStats && p.weekNumber === 1
+  const analysis  = sanitizeDashes(p.coachAnalysis)
   const weekLabel = `SEMAINE&#160;${p.weekNumber}&#160;/&#160;14`
   const jMinus    = `J&#8209;${p.daysLeft}`
   const preheader = hasStats
     ? `Semaine ${p.weekNumber} &#183; ${p.stats.distance > 0 ? p.stats.distance.toFixed(1) + '&#160;km' : '--'} cette semaine &#183; Foul&#233;e`
-    : `Semaine ${p.weekNumber} &#183; Ton programme d&#233;marre &#183; Foul&#233;e`
+    : isWelcomeWeek
+      ? `Semaine ${p.weekNumber} &#183; Ton programme d&#233;marre &#183; Foul&#233;e`
+      : `Semaine ${p.weekNumber} &#183; Ton bilan de la semaine &#183; Foul&#233;e`
 
-  const subtitle = hasStats
-    ? (p.coachAnalysis.split(/[.!?]/)[0]?.slice(0, 90) ?? 'La progression continue.') + '.'
-    : 'Ton programme d&#233;marre aujourd&#8217;hui.'
+  const subtitle = isWelcomeWeek
+    ? 'Ton programme d&#233;marre aujourd&#8217;hui.'
+    : (analysis.split(/[.!?]/)[0]?.slice(0, 90) ?? 'La progression continue.') + '.'
 
-  const bodyParagraphs  = analysisToHtml(p.coachAnalysis)
+  // État vide des stats : idem, on ne parle de « début de programme » qu'en semaine 1.
+  const emptyStatsMessage = isWelcomeWeek
+    ? 'Aucune sortie enregistr&#233;e pour l&#8217;instant&#160;: le programme commence maintenant. Tes premi&#232;res donn&#233;es appara&#238;tront ici d&#232;s la semaine prochaine.'
+    : 'Aucune sortie enregistr&#233;e cette semaine.'
+
+  const bodyParagraphs  = analysisToHtml(analysis)
   const sessionsHtml    = p.nextWeekProgram.map(s => renderSession(s, p.nextWeekStart)).join('')
   const nextWeekNum     = Math.min(p.weekNumber + 1, 14)
   const nextWeekRange   = (() => {
@@ -110,7 +129,7 @@ export function buildEmailHtml(p: EmailParams): string {
     const end   = new Date(p.nextWeekStart)
     end.setDate(end.getDate() + 6)
     const fmt = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-    return `Semaine&#160;${nextWeekNum} &#183; ${start.getDate()}&#8211;${fmt.format(end)}`
+    return `Semaine&#160;${nextWeekNum} &#183; ${start.getDate()} - ${fmt.format(end)}`
   })()
 
   // ── Stats block ─────────────────────────────────────────────────────────
@@ -143,14 +162,14 @@ export function buildEmailHtml(p: EmailParams): string {
         </table>
       </td>
     </tr>` : `
-    <!-- ═══ STATS — ÉTAT VIDE ════════════════════════════════════ -->
+    <!-- ═══ STATS - ETAT VIDE ════════════════════════════════════ -->
     <tr>
       <td style="background-color:#FFFFFF;padding:32px 40px 0 40px;">
         <p style="margin:0 0 16px 0;color:#C5402C;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;">Stats de la semaine</p>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td style="background-color:#F4F0EA;border-left:3px solid #C5402C;border-radius:0 12px 12px 0;padding:20px 24px;">
-              <p style="margin:0;color:#6E5E55;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;">Aucune sortie enregistr&#233;e pour l&#8217;instant&#160;: le programme commence maintenant. Tes premi&#232;res donn&#233;es appara&#238;tront ici d&#232;s la semaine prochaine.</p>
+              <p style="margin:0;color:#6E5E55;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;">${emptyStatsMessage}</p>
             </td>
           </tr>
         </table>
@@ -165,7 +184,7 @@ export function buildEmailHtml(p: EmailParams): string {
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Semaine ${p.weekNumber} &#8211; Vannes-Auray 2026 &#8211; Foul&#233;e</title>
+  <title>Semaine ${p.weekNumber} - Vannes-Auray 2026 - Foul&#233;e</title>
 </head>
 <body style="margin:0;padding:0;background-color:#F4F0EA;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 
@@ -186,7 +205,7 @@ export function buildEmailHtml(p: EmailParams): string {
     <tr>
       <td style="background-color:#C5402C;border-radius:16px 16px 0 0;padding:36px 40px 40px 40px;">
         <p style="margin:0 0 14px 0;color:rgba(255,255,255,0.65);font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;line-height:1;">${weekLabel} &nbsp;&#183;&nbsp; ${jMinus}</p>
-        <h1 style="margin:0 0 12px 0;color:#FFFFFF;font-family:Georgia,'Times New Roman',serif;font-size:38px;font-weight:700;letter-spacing:-0.5px;line-height:1.1;">Vannes&#8211;Auray 2026</h1>
+        <h1 style="margin:0 0 12px 0;color:#FFFFFF;font-family:Georgia,'Times New Roman',serif;font-size:38px;font-weight:700;letter-spacing:-0.5px;line-height:1.1;">Vannes-Auray 2026</h1>
         <p style="margin:0;color:rgba(255,255,255,0.78);font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:400;line-height:1.55;">${subtitle}</p>
       </td>
     </tr>

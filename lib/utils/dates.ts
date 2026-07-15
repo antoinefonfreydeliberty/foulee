@@ -42,5 +42,5 @@ export const formatWeekRange = (weekStart: string): string => {
   const end = new Date(weekStart)
   end.setDate(end.getDate() + 6)
   const fmt = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' })
-  return `${fmt.format(start)} – ${fmt.format(end)}`
+  return `${fmt.format(start)} - ${fmt.format(end)}`
 }
