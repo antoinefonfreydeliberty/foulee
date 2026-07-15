@@ -89,7 +89,8 @@ export const buildWeeklyReportPrompt = (params: {
   nextWeekNumber: number
 }): string => {
   const { profile, weekNumber, plannedSessions, actualLogs, checkin, recentHistory, nextWeekPlanned, nextWeekNumber } = params
-  const noData = actualLogs.length === 0 && !checkin
+  const noSessionsLogged = actualLogs.length === 0
+  const isFirstWeekWelcome = weekNumber === 1 && noSessionsLogged && !checkin
 
   const totalActualKm = (actualLogs as Array<{ distance_km?: number }>)
     .reduce((s, l) => s + (l.distance_km ?? 0), 0)
@@ -124,8 +125,10 @@ ${recentHistory.length > 0 ? JSON.stringify(recentHistory, null, 2) : "Pas encor
 PROGRAMME PRÉVU SEMAINE SUIVANTE (semaine ${nextWeekNumber}/14) :
 ${nextWeekPlanned.length > 0 ? JSON.stringify(nextWeekPlanned, null, 2) : 'Programme semaine suivante non encore défini.'}
 
-${noData ? `CONTEXTE PARTICULIER : C'est la première semaine du programme, ou ${profile.first_name} n'a pas encore enregistré de données.
-Rédige un message d'encouragement et de bienvenue dans le programme plutôt qu'une analyse de performance.
+${isFirstWeekWelcome ? `CONTEXTE PARTICULIER - SEMAINE 1 SANS DONNÉES : c'est le tout début du programme. Rédige un message d'accueil chaleureux et de bienvenue plutôt qu'une analyse de performance. Ne reproche rien.
+` : noSessionsLogged ? `CONTEXTE PARTICULIER - AUCUNE SORTIE ENREGISTRÉE CETTE SEMAINE (nous sommes en semaine ${weekNumber}, pas au démarrage du programme) :
+Ne suppose PAS que ${profile.first_name} n'a pas couru : il a peut-être fait des sorties sans les enregistrer dans l'app, ou vécu une semaine off pour une raison légitime (fatigue, blessure, imprévu).
+Dans ton analyse, demande-lui explicitement, mais sans jamais culpabiliser, s'il a couru cette semaine sans noter ses séances. Invite-le à les ajouter dans le Journal, ou à remplir le check-in hebdomadaire s'il veut aussi partager sa forme et ses douleurs pour que tu puisses adapter la suite. Le but est de récupérer l'information, pas de faire un reproche. Ne parle jamais de "programme qui démarre" ni de "premières données" : le programme est déjà en cours. Reste bienveillant et garde une porte ouverte pour la semaine suivante.
 ` : ''}Règles d'adaptation du programme semaine suivante :
 - Ressenti <= 2 → réduire volume de 10-15%, alléger ou retirer le fractionné
 - Douleur >= 1 → ajouter étirements, éviter séances intenses

@@ -5,6 +5,18 @@ Fichier de changelog évolutif de l'application **Foulée** (scope : foulée act
 
 ---
 
+## 2026-07-15 (suite) — Semaine sans sortie : le coach demande les séances non notées
+
+- **Contexte :** vérification en base — la table `weekly_checkins` est vide pour les 4 coureurs (fonctionnalité jamais utilisée, aucune donnée perdue). Le ressenti/douleurs cités dans les emails viennent du **Journal** (`training_logs`), pas des check-ins.
+- **Cause racine du texte à améliorer :** dans `buildWeeklyReportPrompt`, la condition `noData` (aucune sortie loggée) déclenchait un message d'accueil « première semaine / bienvenue » quelle que soit la semaine, et supposait implicitement une semaine blanche.
+- **Fix appliqué (`lib/claude/prompts.ts`) :** remplacement de `noData` par deux cas explicites :
+  - `isFirstWeekWelcome` (semaine 1 sans données) → message d'accueil chaleureux, inchangé.
+  - `noSessionsLogged` en semaine > 1 → nouvelle consigne : le coach ne suppose pas l'absence de course, demande explicitement (sans culpabiliser) s'il y a eu des sorties non notées, et invite à les ajouter dans le Journal ou via le check-in ; interdiction de parler de « programme qui démarre ».
+- **Portée :** rapport hebdomadaire uniquement (chat coach non modifié, décision produit).
+- **Vérif :** `npm run build` OK.
+
+---
+
 ## 2026-07-15 — Corrections email hebdomadaire (retour Antoine, semaine 5)
 
 Trois bugs remontés sur l'email hebdomadaire du dimanche.
