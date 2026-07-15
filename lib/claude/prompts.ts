@@ -87,10 +87,13 @@ export const buildWeeklyReportPrompt = (params: {
   recentHistory: unknown[]
   nextWeekPlanned: TrainingSession[]
   nextWeekNumber: number
+  noSessionStreak?: number   // nb de semaines consécutives (dont la courante) sans aucune sortie enregistrée
 }): string => {
-  const { profile, weekNumber, plannedSessions, actualLogs, checkin, recentHistory, nextWeekPlanned, nextWeekNumber } = params
+  const { profile, weekNumber, plannedSessions, actualLogs, checkin, recentHistory, nextWeekPlanned, nextWeekNumber, noSessionStreak = 0 } = params
   const noSessionsLogged = actualLogs.length === 0
   const isFirstWeekWelcome = weekNumber === 1 && noSessionsLogged && !checkin
+  const prolongedAbsence = noSessionStreak >= 2
+  const streakFirstWeek = weekNumber - noSessionStreak + 1   // 1re semaine de la série sans sortie
 
   const totalActualKm = (actualLogs as Array<{ distance_km?: number }>)
     .reduce((s, l) => s + (l.distance_km ?? 0), 0)
@@ -127,8 +130,9 @@ ${nextWeekPlanned.length > 0 ? JSON.stringify(nextWeekPlanned, null, 2) : 'Progr
 
 ${isFirstWeekWelcome ? `CONTEXTE PARTICULIER - SEMAINE 1 SANS DONNÉES : c'est le tout début du programme. Rédige un message d'accueil chaleureux et de bienvenue plutôt qu'une analyse de performance. Ne reproche rien.
 ` : noSessionsLogged ? `CONTEXTE PARTICULIER - AUCUNE SORTIE ENREGISTRÉE CETTE SEMAINE (nous sommes en semaine ${weekNumber}, pas au démarrage du programme) :
-Ne suppose PAS que ${profile.first_name} n'a pas couru : il a peut-être fait des sorties sans les enregistrer dans l'app, ou vécu une semaine off pour une raison légitime (fatigue, blessure, imprévu).
-Dans ton analyse, demande-lui explicitement, mais sans jamais culpabiliser, s'il a couru cette semaine sans noter ses séances. Invite-le à les ajouter dans le Journal, ou à remplir le check-in hebdomadaire s'il veut aussi partager sa forme et ses douleurs pour que tu puisses adapter la suite. Le but est de récupérer l'information, pas de faire un reproche. Ne parle jamais de "programme qui démarre" ni de "premières données" : le programme est déjà en cours. Reste bienveillant et garde une porte ouverte pour la semaine suivante.
+${prolongedAbsence ? `C'est la ${noSessionStreak}e semaine CONSÉCUTIVE sans aucune sortie enregistrée (semaines ${streakFirstWeek} à ${weekNumber}). Tu dois montrer que tu as une vision d'ensemble sur ces dernières semaines : évoque explicitement et sans détour cette absence prolongée (nomme le nombre de semaines), avec bienveillance et sans dramatiser ni culpabiliser. Cherche à comprendre ce qui se passe sur la durée (blessure, fatigue persistante, perte de motivation, ou simplement des sorties faites mais jamais notées ?). Cette prise de recul est le coeur de ton message cette semaine.
+` : ''}Ne suppose PAS que ${profile.first_name} n'a pas couru : il a peut-être fait des sorties sans les enregistrer dans l'app, ou vécu une période off pour une raison légitime.
+Dans ton analyse, demande-lui explicitement, mais sans jamais culpabiliser, s'il a couru sans noter ses séances. Invite-le clairement à faire le point via le check-in hebdomadaire (un bouton "Faire mon check-in" est présent dans cet email) : cela te permet de savoir s'il a couru, comment il se sent, s'il a des douleurs, et d'adapter la suite. Le but est de récupérer l'information et de renouer le contact, pas de faire un reproche. Ne parle jamais de "programme qui démarre" ni de "premières données" : le programme est déjà en cours. Reste bienveillant et garde une porte ouverte pour la suite.
 ` : ''}Règles d'adaptation du programme semaine suivante :
 - Ressenti <= 2 → réduire volume de 10-15%, alléger ou retirer le fractionné
 - Douleur >= 1 → ajouter étirements, éviter séances intenses

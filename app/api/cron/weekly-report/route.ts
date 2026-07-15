@@ -56,17 +56,34 @@ export async function GET(req: NextRequest) {
         { data: logs },
         { data: checkin },
         { data: recentReports },
+        { data: allLogs },
       ] = await Promise.all([
         supabase.from('training_programs').select('sessions').eq('user_id', profile.user_id).eq('week_start', weekStart).maybeSingle(),
         supabase.from('training_programs').select('sessions').eq('user_id', profile.user_id).eq('week_start', nextWeekStart).maybeSingle(),
         supabase.from('training_logs').select('*').eq('user_id', profile.user_id).gte('date', weekStart).lt('date', nextWeekStart),
         supabase.from('weekly_checkins').select('*').eq('user_id', profile.user_id).eq('week_start', weekStart).maybeSingle(),
         supabase.from('weekly_reports').select('*').eq('user_id', profile.user_id).order('week_start', { ascending: false }).limit(3),
+        supabase.from('training_logs').select('date').eq('user_id', profile.user_id).gte('date', programStart),
       ])
 
       const plannedSessions = (currentProgram?.sessions ?? []) as TrainingSession[]
       const nextWeekPlanned = (nextProgram?.sessions ?? []) as TrainingSession[]
       const actualLogs = logs ?? []
+
+      // Streak de semaines consécutives sans aucune sortie enregistrée (dont la semaine courante).
+      // Sert au coach à évoquer une absence prolongée avec du recul sur les semaines passées.
+      const loggedWeeks = new Set(
+        ((allLogs ?? []) as { date: string }[]).map((l) => {
+          const d = new Date(l.date + 'T00:00:00').getTime()
+          const s = new Date(programStart + 'T00:00:00').getTime()
+          return Math.floor((d - s) / (7 * 86_400_000)) + 1
+        })
+      )
+      let noSessionStreak = 0
+      for (let w = weekNumber; w >= 1; w--) {
+        if (loggedWeeks.has(w)) break
+        noSessionStreak++
+      }
 
       // Generate weekly report JSON
       const reportResult = await callClaudeWithRetry(async () => {
@@ -86,6 +103,7 @@ export async function GET(req: NextRequest) {
               recentHistory: recentReports ?? [],
               nextWeekPlanned,
               nextWeekNumber,
+              noSessionStreak,
             }),
           }],
         })
@@ -113,6 +131,7 @@ export async function GET(req: NextRequest) {
       // the click opens the dashboard directly; otherwise proxy.ts redirects to
       // /login where the OTP flow takes over.
       const magicLink = `${process.env.NEXT_PUBLIC_URL}/dashboard`
+      const checkinLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/checkin`
 
       // Generate email HTML from template
       const htmlContent = buildEmailHtml({
@@ -125,6 +144,7 @@ export async function GET(req: NextRequest) {
         daysLeft:        getDaysLeft(),
         nextWeekStart,
         magicLink,
+        checkinLink,
       })
 
       // Upsert weekly report

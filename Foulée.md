@@ -475,12 +475,16 @@ Une ligne par séance individuelle.
 
 ### Table `weekly_checkins`
 
-- `id`, `user_id`, `week_number`
-- `energy_level` (1-5), `motivation_level` (1-5)
-- `physical_tags` (array de strings)
-- `program_followed` (boolean), `free_comment`
-- `feeling_score`, `pain_notes`
+Contrainte unique : `(user_id, week_start)` → écrite en `upsert` par `/api/checkin`.
+Schéma **réel** (créé à la main dans Supabase, non tracké dans les migrations) :
+
+- `id`, `user_id`, `week_start` (date ISO — lundi ISO calculé via `getWeekStart()`)
+- `sessions_count` (int), `total_distance_km` (numeric)
+- `feeling_score` (1-5 — énergie/ressenti), `pain_level` (int), `pain_notes` (string)
+- `free_word` (commentaire libre)
 - `submitted_at`
+
+> **Attention (15/07/26)** : pas de colonne `week_number` ni `energy_level` / `motivation_level` / `physical_tags` / `program_followed` / `free_comment` (ancienne doc erronée, réalignée sur le réel). La table est **actuellement vide** (check-in jamais utilisé) — le ressenti et les douleurs exploités par le coach proviennent de `training_logs` (Journal), pas de cette table.
 
 ### Table `weekly_reports`
 
@@ -663,6 +667,7 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 | **15/07/26** | **Email : anti-répétition du prénom** | Le template ouvre déjà sur `Bonjour {prénom},` ; consigne ajoutée dans le prompt `coach_analysis` pour ne pas répéter la salutation ni le prénom dans les 2 premiers paragraphes (max 1 fois, jamais à <50 mots d'intervalle) |
 | **15/07/26** | **Email : faux message « programme démarre » hors semaine 1** | Bug semaine 5 : hero « Ton programme démarre aujourd'hui » et stats « le programme commence maintenant » se déclenchaient dès `sessions === 0`. Nouvelle condition `isWelcomeWeek = !hasStats && weekNumber === 1` dans `buildEmailHtml`. Semaine >1 sans séance → sous-titre neutre (1re phrase de l'analyse) + « Aucune sortie enregistrée cette semaine. » |
 | **15/07/26** | **Prompt rapport : semaine sans sortie → demander les séances non notées** | `weekly_checkins` vérifiée vide (jamais utilisée, ressenti/douleurs viennent en réalité de `training_logs`). Dans `buildWeeklyReportPrompt`, `noData` scindé en `isFirstWeekWelcome` (accueil semaine 1) et `noSessionsLogged` (semaine >1) : le coach demande alors, sans culpabiliser, si des sorties ont été faites sans être notées et invite à les ajouter (Journal ou check-in), sans jamais parler de « programme qui démarre » |
+| **15/07/26** | **Absence prolongée : vision longue + bouton check-in** | Cron calcule `noSessionStreak` (semaines consécutives sans sortie, depuis tous les `training_logs` du programme). Si ≥ 2, le coach évoque explicitement l'absence prolongée avec recul. Email : quand 0 séance loggée, CTA principal « Faire mon check-in » (→ `/dashboard/checkin`, param `checkinLink`) + lien secondaire dashboard. Schéma `weekly_checkins` réaligné dans la doc. Params `noSessionStreak`/`checkinLink` optionnels (le build racine type-check aussi `foulee_pro/`) |
 
 ---
 

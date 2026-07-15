@@ -14,6 +14,7 @@ export interface EmailParams {
   daysLeft:        number
   nextWeekStart:   string   // ISO date string of next Monday
   magicLink:       string
+  checkinLink?:    string   // URL de la page check-in (/dashboard/checkin) ; défaut = magicLink
 }
 
 // ---------------------------------------------------------------------------
@@ -229,12 +230,19 @@ export function buildEmailHtml(p: EmailParams): string {
       </td>
     </tr>
 
-    <!-- ═══ SIGNATURE ══════════════════════════════════════════════ -->
+    <!-- ═══ CTA ════════════════════════════════════════════════════ -->
     <tr>
       <td style="background-color:#FFFFFF;padding:32px 40px 0 40px;">
+        ${hasStats ? `
         <a href="${p.magicLink}" style="display:inline-block;background-color:#C5402C;color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;text-decoration:none;border-radius:10px;padding:14px 28px;margin-bottom:32px;">
           Ouvrir mon dashboard &#8594;
+        </a>` : `
+        <a href="${p.checkinLink ?? p.magicLink}" style="display:inline-block;background-color:#C5402C;color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;text-decoration:none;border-radius:10px;padding:14px 28px;">
+          Faire mon check-in &#8594;
         </a>
+        <p style="margin:12px 0 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;">
+          <a href="${p.magicLink}" style="color:#6E5E55;text-decoration:underline;">ou ouvrir mon dashboard</a>
+        </p>`}
       </td>
     </tr>
 

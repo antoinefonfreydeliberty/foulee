@@ -5,6 +5,18 @@ Fichier de changelog évolutif de l'application **Foulée** (scope : foulée act
 
 ---
 
+## 2026-07-15 (suite 2) — Absence prolongée : vision longue + bouton check-in
+
+- **Schéma `weekly_checkins` réaligné dans Foulée.md** sur le réel (`sessions_count`, `total_distance_km`, `feeling_score`, `pain_level`, `pain_notes`, `free_word`, `week_start`, `submitted_at` ; pas de `week_number` ni `energy_level`/`motivation_level`/`physical_tags`/`program_followed`/`free_comment`).
+- **Vision longue sur l'absence de sorties (`buildWeeklyReportPrompt` + cron) :**
+  - Le cron calcule `noSessionStreak` = nombre de semaines consécutives (dont la courante) sans aucune sortie enregistrée, à partir de tous les `training_logs` depuis le début du programme.
+  - Quand ce streak ≥ 2, le coach reçoit la consigne d'évoquer explicitement l'absence prolongée (en nommant le nombre de semaines et la plage), avec recul et bienveillance, et de chercher à comprendre sur la durée (blessure, fatigue, motivation, ou sorties non notées).
+- **Bouton check-in dans l'email (`buildEmailHtml`) :** quand aucune séance n'est enregistrée pour la semaine, le CTA principal devient « Faire mon check-in » (→ `/dashboard/checkin`), avec un lien secondaire vers le dashboard. En semaine normale, le CTA reste « Ouvrir mon dashboard ». Nouveau param `checkinLink` (optionnel, fallback `magicLink`).
+- **Note technique :** `noSessionStreak` et `checkinLink` rendus **optionnels** volontairement — le build racine type-check aussi `foulee_pro/` (via `include: **/*.ts` + alias `@/*` → racine), donc une signature requise aurait cassé la compilation de `foulee_pro`. Params optionnels = rétrocompatible, sans toucher `foulee_pro/`.
+- **Vérif :** `npm run build` OK ; rendu email simulé (bouton check-in présent uniquement sans séance, dashboard sinon).
+
+---
+
 ## 2026-07-15 (suite) — Semaine sans sortie : le coach demande les séances non notées
 
 - **Contexte :** vérification en base — la table `weekly_checkins` est vide pour les 4 coureurs (fonctionnalité jamais utilisée, aucune donnée perdue). Le ressenti/douleurs cités dans les emails viennent du **Journal** (`training_logs`), pas des check-ins.
