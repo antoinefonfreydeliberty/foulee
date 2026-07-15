@@ -108,21 +108,11 @@ export async function GET(req: NextRequest) {
       const { data: userData } = await supabase.auth.admin.getUserById(profile.user_id)
       const userEmail = userData?.user?.email ?? ''
 
-      // Generate magic link (valid 7 days)
-      let magicLink = `${process.env.NEXT_PUBLIC_URL}/login`
-      if (userEmail) {
-        const { data: linkData } = await supabase.auth.admin.generateLink({
-          type: 'magiclink',
-          email: userEmail,
-          options: {
-            redirectTo: `${process.env.NEXT_PUBLIC_URL}/dashboard`,
-            expiresIn: 604800,
-          },
-        })
-        if (linkData?.properties?.action_link) {
-          magicLink = linkData.properties.action_link
-        }
-      }
+      // Plain dashboard URL (no single-use magic token: Gmail's link prescan
+      // consumes one-time links before the user clicks). If the session is valid
+      // the click opens the dashboard directly; otherwise proxy.ts redirects to
+      // /login where the OTP flow takes over.
+      const magicLink = `${process.env.NEXT_PUBLIC_URL}/dashboard`
 
       // Generate email HTML from template
       const htmlContent = buildEmailHtml({
