@@ -1,4 +1,4 @@
-import type { TrainingSession } from '@/types'
+import type { ClassementEntry, TrainingSession } from '@/types'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -15,6 +15,7 @@ export interface EmailParams {
   nextWeekStart:   string   // ISO date string of next Monday
   magicLink:       string
   checkinLink?:    string   // URL de la page check-in (/dashboard/checkin) ; défaut = magicLink
+  classement?:     ClassementEntry[]   // classement nominatif de la semaine (identique dans les 4 emails)
 }
 
 // ---------------------------------------------------------------------------
@@ -92,6 +93,58 @@ function renderSession(session: TrainingSession, nextWeekStart: string): string 
         </td>
       </tr>
     </table>`
+}
+
+// ---------------------------------------------------------------------------
+// Classement nominatif de la semaine (podium)
+// ---------------------------------------------------------------------------
+// ATTENTION : ce HTML est statique (pas de passage par sanitizeDashes, qui ne
+// nettoie que le texte IA). Ne jamais introduire de tiret cadratin (—) ni
+// demi-cadratin (–) ici : uniquement des tirets simples et des entités HTML.
+// Les valeurs 0 km / 0 sortie sont affichées telles quelles (donnée agrégée
+// réelle, la règle "jamais 0 km" ne s'applique pas au classement de groupe).
+
+const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
+
+function renderClassement(classement: ClassementEntry[]): string {
+  if (!classement || classement.length === 0) return ''
+
+  const rows = classement.map((c, i) => {
+    const isLast   = i === classement.length - 1
+    const kmLabel  = c.km.toFixed(1).replace('.', ',')
+    const badge    = MEDALS[c.rang]
+      ? `<span style="font-size:20px;line-height:1;">${MEDALS[c.rang]}</span>`
+      : `<span style="color:#6E5E55;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;">${c.rang}.</span>`
+
+    return `
+              <tr>
+                <td style="padding:13px 18px;${isLast ? '' : 'border-bottom:1px solid #EDE8E1;'}">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td width="34" style="vertical-align:middle;">${badge}</td>
+                      <td style="vertical-align:middle;">
+                        <span style="color:#160E08;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;">${escapeHtml(c.prenom)}</span>
+                      </td>
+                      <td align="right" style="vertical-align:middle;white-space:nowrap;">
+                        <span style="color:#160E08;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;">${kmLabel}&#160;km</span>
+                        <span style="color:#6E5E55;font-family:Arial,Helvetica,sans-serif;font-size:12px;">&#160;&#183;&#160;${c.sorties}&#160;sortie${c.sorties > 1 ? 's' : ''}</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>`
+  }).join('')
+
+  return `
+    <!-- ═══ CLASSEMENT DE LA SEMAINE ══════════════════════════════ -->
+    <tr>
+      <td style="background-color:#FFFFFF;padding:32px 40px 8px 40px;">
+        <p style="margin:0 0 4px 0;color:#C5402C;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;">Classement</p>
+        <p style="margin:0 0 16px 0;color:#160E08;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:700;line-height:1.3;">Le classement de la semaine</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #DDD7CE;border-radius:12px;background-color:#FFFFFF;">${rows}
+        </table>
+      </td>
+    </tr>`
 }
 
 // ---------------------------------------------------------------------------
@@ -258,7 +311,7 @@ export function buildEmailHtml(p: EmailParams): string {
         </table>
       </td>
     </tr>
-
+${renderClassement(p.classement ?? [])}
     <!-- ═══ DIVISEUR ══════════════════════════════════════════════ -->
     <tr>
       <td style="background-color:#FFFFFF;padding:0 40px;">

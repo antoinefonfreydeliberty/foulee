@@ -5,6 +5,29 @@ Fichier de changelog évolutif de l'application **Foulée** (scope : foulée act
 
 ---
 
+## 2026-07-18 — Classement nominatif de la semaine dans l'email hebdomadaire
+
+- **Objectif :** ajouter en fin d'email (juste avant le pied de page, après le programme de la semaine suivante) un tableau de classement des 4 coureurs par km parcourus sur la semaine, identique dans les 4 emails, plus une évocation personnelle du coach sur la position du destinataire, intégrée à `coach_analysis`.
+- **Contrainte clé (validée avec Antoine) : aucun nouvel appel Claude.** Le tableau est calculé de façon **déterministe en code** ; seule l'évocation personnelle passe par Claude, en enrichissant le prompt `coach_analysis` déjà existant.
+- **Calcul du classement (`app/api/cron/weekly-report/route.ts`) :**
+  - Calculé **une seule fois par run**, avant la boucle par utilisateur (jamais recalculé par destinataire).
+  - **Une seule requête Supabase supplémentaire** sur `training_logs` (`createAdminClient`), filtrée `date >= weekStart` et `date < nextWeekStart` pour les user_ids du groupe. Fenêtre de dates **strictement identique** à celle du rapport individuel existant (via `getProgramWeekStart`, pas `getWeekStart`).
+  - Agrégation en code par `user_id` (somme `distance_km` + comptage des sorties), chaque coureur pré-initialisé à `0/0`. Tri : km décroissant, puis sorties décroissant, puis prénom alphabétique (ordre strict, groupe fermé de 4).
+  - Un coureur à 0 km / 0 sortie reste affiché avec ces valeurs réelles (la règle « jamais 0 km » ne s'applique pas à cette donnée agrégée de groupe).
+  - Nouveau type `ClassementEntry` (`types/index.ts`) : `{ rang, userId, prenom, km, sorties }`.
+- **Rendu du podium (`lib/brevo/email-builder.ts`) :** nouvelle fonction `renderClassement()` — médailles 🥇🥈🥉 pour les rangs 1-3, « 4. » (texte) pour le rang 4, colonnes prénom / km (une décimale, virgule) / nombre de sorties. Titre « Le classement de la semaine ». Bloc inséré avant le diviseur+footer, affiché **dans tous les cas** (accueil, semaine blanche, semaine normale), indépendant de `isWelcomeWeek`/`noSessionsLogged`. HTML statique : aucun tiret cadratin/demi-cadratin (vigilance manuelle, `sanitizeDashes` ne couvre que le texte IA). Nouveau param `classement?` dans `EmailParams`.
+- **Évocation personnelle (`lib/claude/prompts.ts`) :** nouveau param `classement?` dans `buildWeeklyReportPrompt`. Le contexte injecté sépare explicitement le destinataire (`toi: { rang, km, sorties }`) des `autres: [{ prenom, rang, km, sorties }]`. Consigne grammaticale dédiée (indépendante du ton) : le destinataire est TOUJOURS désigné par « tu »/« toi », jamais par son prénom à la 3e personne ; les autres sont nommés par leur prénom réel à la 3e personne. Faits réels uniquement, aucune invention, pas de tiret cadratin/demi-cadratin. Commentaire glissé dans `coach_analysis`, pas de bloc séparé.
+- **Vérif :** `npx tsc --noEmit` OK (y compris `foulee_pro/`). **Vraie génération de test** `claude-sonnet-4-6` pour 2 profils (1er et dernier du classement) : règle « tu/toi » respectée pour le destinataire, autres participants correctement nommés, 0 tiret cadratin/demi-cadratin. Rendu HTML du podium vérifié (0,0 km / 0 sortie affiché pour un coureur sans séance).
+
+### Fichiers modifiés
+
+- `app/api/cron/weekly-report/route.ts`
+- `lib/brevo/email-builder.ts`
+- `lib/claude/prompts.ts`
+- `types/index.ts`
+
+---
+
 ## 2026-07-15 (suite 2) — Absence prolongée : vision longue + bouton check-in
 
 - **Schéma `weekly_checkins` réaligné dans Foulée.md** sur le réel (`sessions_count`, `total_distance_km`, `feeling_score`, `pain_level`, `pain_notes`, `free_word`, `week_start`, `submitted_at` ; pas de `week_number` ni `energy_level`/`motivation_level`/`physical_tags`/`program_followed`/`free_comment`).

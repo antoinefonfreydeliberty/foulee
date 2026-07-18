@@ -1,4 +1,4 @@
-import type { CoachStyle, Profile, TrainingSession } from '@/types'
+import type { ClassementEntry, CoachStyle, Profile, TrainingSession } from '@/types'
 import { getDaysLeft, getProgramWeek } from '@/lib/utils/dates'
 
 const STYLE_INSTRUCTIONS: Record<CoachStyle, string> = {
@@ -88,8 +88,9 @@ export const buildWeeklyReportPrompt = (params: {
   nextWeekPlanned: TrainingSession[]
   nextWeekNumber: number
   noSessionStreak?: number   // nb de semaines consécutives (dont la courante) sans aucune sortie enregistrée
+  classement?: ClassementEntry[]   // classement nominatif de la semaine (groupe des 4 coureurs)
 }): string => {
-  const { profile, weekNumber, plannedSessions, actualLogs, checkin, recentHistory, nextWeekPlanned, nextWeekNumber, noSessionStreak = 0 } = params
+  const { profile, weekNumber, plannedSessions, actualLogs, checkin, recentHistory, nextWeekPlanned, nextWeekNumber, noSessionStreak = 0, classement = [] } = params
   const noSessionsLogged = actualLogs.length === 0
   const isFirstWeekWelcome = weekNumber === 1 && noSessionsLogged && !checkin
   const prolongedAbsence = noSessionStreak >= 2
@@ -106,6 +107,19 @@ export const buildWeeklyReportPrompt = (params: {
   const comparisonLine = totalPlannedKm > 0
     ? `Volume planifie : ${totalPlannedKm} km | Volume realise : ${totalActualKm.toFixed(1)} km | Ecart : ${ecartLabel}`
     : 'Pas de programme defini pour cette semaine.'
+
+  // Classement de la semaine, structuré pour distinguer le destinataire (toi) des
+  // autres participants. Le coach doit pouvoir commenter n'importe quelle position.
+  const moi = classement.find((c) => c.userId === profile.user_id)
+  const autres = classement
+    .filter((c) => c.userId !== profile.user_id)
+    .map((c) => ({ prenom: c.prenom, rang: c.rang, km: Number(c.km.toFixed(1)), sorties: c.sorties }))
+  const classementBlock = moi ? `
+CLASSEMENT DE LA SEMAINE (donnees reelles du groupe, classe par km parcourus cette semaine, ${classement.length} coureurs) :
+toi: ${JSON.stringify({ rang: moi.rang, km: Number(moi.km.toFixed(1)), sorties: moi.sorties })}
+autres: ${JSON.stringify(autres)}
+CONSIGNE CLASSEMENT (obligatoire, independante de ton style) : integre dans coach_analysis une evocation courte et naturelle de ce classement, glissee dans un paragraphe existant, PAS dans une section separee. Regle de designation stricte : le destinataire (toi) est TOUJOURS designe par "tu"/"toi", JAMAIS par son prenom (${profile.first_name}) a la troisieme personne. Les autres participants sont designes par leur prenom reel, a la troisieme personne (ex : "Hugo est en tete avec 32 km en 4 sorties, toi tu es deuxieme avec 27 km en 3 sorties"). Tu peux commenter factuellement la performance de n'importe quel participant. Reste sur des faits reels (km, sorties, rang) : n'invente jamais un chiffre. Ton taquin ou piquant autorise mais non obligatoire. Aucun tiret cadratin (—) ni demi-cadratin (–).
+` : ''
 
   return `Analyse de la semaine ${weekNumber}/14 pour ${profile.first_name}.
 
@@ -127,7 +141,7 @@ ${recentHistory.length > 0 ? JSON.stringify(recentHistory, null, 2) : "Pas encor
 
 PROGRAMME PRÉVU SEMAINE SUIVANTE (semaine ${nextWeekNumber}/14) :
 ${nextWeekPlanned.length > 0 ? JSON.stringify(nextWeekPlanned, null, 2) : 'Programme semaine suivante non encore défini.'}
-
+${classementBlock}
 ${isFirstWeekWelcome ? `CONTEXTE PARTICULIER - SEMAINE 1 SANS DONNÉES : c'est le tout début du programme. Rédige un message d'accueil chaleureux et de bienvenue plutôt qu'une analyse de performance. Ne reproche rien.
 ` : noSessionsLogged ? `CONTEXTE PARTICULIER - AUCUNE SORTIE ENREGISTRÉE CETTE SEMAINE (nous sommes en semaine ${weekNumber}, pas au démarrage du programme) :
 ${prolongedAbsence ? `C'est la ${noSessionStreak}e semaine CONSÉCUTIVE sans aucune sortie enregistrée (semaines ${streakFirstWeek} à ${weekNumber}). Tu dois montrer que tu as une vision d'ensemble sur ces dernières semaines : évoque explicitement et sans détour cette absence prolongée (nomme le nombre de semaines), avec bienveillance et sans dramatiser ni culpabiliser. Cherche à comprendre ce qui se passe sur la durée (blessure, fatigue persistante, perte de motivation, ou simplement des sorties faites mais jamais notées ?). Cette prise de recul est le coeur de ton message cette semaine.

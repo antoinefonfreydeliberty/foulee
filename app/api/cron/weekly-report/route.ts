@@ -6,7 +6,7 @@ import { sendWeeklyEmail } from '@/lib/brevo/client'
 import { buildEmailHtml } from '@/lib/brevo/email-builder'
 import { getDaysLeft, getProgramWeek, getProgramWeekStart } from '@/lib/utils/dates'
 import { calcPace } from '@/lib/utils/pace'
-import type { Profile, TrainingSession } from '@/types'
+import type { ClassementEntry, Profile, TrainingSession } from '@/types'
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -23,6 +23,48 @@ export async function GET(req: NextRequest) {
   if (!profiles || profiles.length === 0) {
     return NextResponse.json({ success: true, processed: 0, skipped: 0, errors: [] })
   }
+
+  // ─── Classement nominatif de la semaine (calculé UNE SEULE fois par run) ───
+  // Données de groupe identiques dans les 4 emails. Une seule requête Supabase,
+  // hors de la boucle par utilisateur. Fenêtre de dates STRICTEMENT identique à
+  // celle du rapport individuel (weekStart -> nextWeekStart), pour qu'une séance
+  // saisie dimanche avant le cron soit comptée de façon cohérente des deux côtés.
+  const classementProfiles = profiles as Profile[]
+  const groupProgramStart = process.env.PROGRAM_START_DATE!
+  const groupWeekNumber = Math.max(1, getProgramWeek(groupProgramStart))
+  const groupWeekStart = getProgramWeekStart(groupProgramStart, groupWeekNumber)
+  const groupNextWeekStart = getProgramWeekStart(groupProgramStart, Math.min(groupWeekNumber + 1, 14))
+
+  const { data: groupWeekLogs } = await supabase
+    .from('training_logs')
+    .select('user_id, distance_km')
+    .in('user_id', classementProfiles.map((p) => p.user_id))
+    .gte('date', groupWeekStart)
+    .lt('date', groupNextWeekStart)
+
+  // Agrégation par user_id : somme des km + comptage des sorties.
+  // Chaque coureur du groupe est pré-initialisé à 0/0 : un coureur sans aucune
+  // séance cette semaine reste présent dans le classement avec ces valeurs réelles.
+  const aggByUser = new Map<string, { km: number; sorties: number }>()
+  for (const p of classementProfiles) aggByUser.set(p.user_id, { km: 0, sorties: 0 })
+  for (const row of (groupWeekLogs ?? []) as { user_id: string; distance_km: number | null }[]) {
+    const agg = aggByUser.get(row.user_id)
+    if (!agg) continue
+    agg.km += row.distance_km ?? 0
+    agg.sorties += 1
+  }
+
+  // Tri : km décroissant, puis sorties décroissant, puis prénom alphabétique.
+  // Groupe fermé de 4 personnes -> ordre strict, pas de gestion d'ex aequo affiché.
+  const classement: ClassementEntry[] = classementProfiles
+    .map((p) => ({
+      userId: p.user_id,
+      prenom: p.first_name,
+      km: aggByUser.get(p.user_id)!.km,
+      sorties: aggByUser.get(p.user_id)!.sorties,
+    }))
+    .sort((a, b) => b.km - a.km || b.sorties - a.sorties || a.prenom.localeCompare(b.prenom, 'fr'))
+    .map((entry, index) => ({ rang: index + 1, ...entry }))
 
   const processed: string[] = []
   const skipped: string[] = []
@@ -104,6 +146,7 @@ export async function GET(req: NextRequest) {
               nextWeekPlanned,
               nextWeekNumber,
               noSessionStreak,
+              classement,
             }),
           }],
         })
@@ -145,6 +188,7 @@ export async function GET(req: NextRequest) {
         nextWeekStart,
         magicLink,
         checkinLink,
+        classement,
       })
 
       // Upsert weekly report

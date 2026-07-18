@@ -106,6 +106,17 @@ export interface GroupMember {
   avg_pace_raw: number | null
 }
 
+// Une ligne du classement nominatif de la semaine (email hebdomadaire).
+// km et sorties sont des données agrégées réelles : 0 est une valeur valide
+// (la règle "jamais 0 km" ne s'applique pas ici, cf. Foulée.md).
+export interface ClassementEntry {
+  rang: number
+  userId: string
+  prenom: string
+  km: number
+  sorties: number
+}
+
 export interface ProgramWeek {
   week_number: number
   week_start: string
