@@ -16,6 +16,7 @@ export interface EmailParams {
   magicLink:       string
   checkinLink?:    string   // URL de la page check-in (/dashboard/checkin) ; défaut = magicLink
   classement?:     ClassementEntry[]   // classement nominatif de la semaine (identique dans les 4 emails)
+  catchUpNotice?:  string   // bandeau de rattrapage en tête d'email (script one-shot uniquement ; jamais passé par le cron)
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +176,20 @@ export function buildEmailHtml(p: EmailParams): string {
     ? 'Aucune sortie enregistr&#233;e pour l&#8217;instant&#160;: le programme commence maintenant. Tes premi&#232;res donn&#233;es appara&#238;tront ici d&#232;s la semaine prochaine.'
     : 'Aucune sortie enregistr&#233;e cette semaine.'
 
+  // Bandeau de rattrapage : rendu UNIQUEMENT si catchUpNotice est fourni
+  // (script one-shot). Le cron ne passe jamais ce paramètre -> parcours normal
+  // inchangé. Texte nettoyé via sanitizeDashes() comme le reste du texte IA.
+  const catchUpBanner = p.catchUpNotice
+    ? `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+          <tr>
+            <td style="background-color:#F4F0EA;border-left:3px solid #C5402C;border-radius:0 10px 10px 0;padding:14px 18px;">
+              <p style="margin:0;color:#160E08;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;">${escapeHtml(sanitizeDashes(p.catchUpNotice))}</p>
+            </td>
+          </tr>
+        </table>`
+    : ''
+
   const bodyParagraphs  = analysisToHtml(analysis)
   const sessionsHtml    = p.nextWeekProgram.map(s => renderSession(s, p.nextWeekStart)).join('')
   const nextWeekNum     = Math.min(p.weekNumber + 1, 14)
@@ -266,7 +281,7 @@ export function buildEmailHtml(p: EmailParams): string {
 
     <!-- ═══ BODY ══════════════════════════════════════════════════ -->
     <tr>
-      <td style="background-color:#FFFFFF;padding:36px 40px 0 40px;">
+      <td style="background-color:#FFFFFF;padding:36px 40px 0 40px;">${catchUpBanner}
         <p style="margin:0 0 24px 0;color:#160E08;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:700;line-height:1.3;">Bonjour ${escapeHtml(p.firstName)},</p>
         ${bodyParagraphs}
       </td>

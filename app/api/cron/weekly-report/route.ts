@@ -8,6 +8,12 @@ import { getDaysLeft, getProgramWeek, getProgramWeekStart } from '@/lib/utils/da
 import { calcPace } from '@/lib/utils/pace'
 import type { ClassementEntry, Profile, TrainingSession } from '@/types'
 
+// Traitement parallèle des utilisateurs (cf. Foulée.md, timeout cron semaine 7
+// sur Alix) : le temps mural ne dépend plus de la SOMME des traitements mais du
+// plus long. maxDuration explicite = plafond effectif déjà appliqué par la
+// plateforme (le run semaine 7 a été tué à 300 s). À vérifier côté plan Vercel.
+export const maxDuration = 300
+
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -66,11 +72,16 @@ export async function GET(req: NextRequest) {
     .sort((a, b) => b.km - a.km || b.sorties - a.sorties || a.prenom.localeCompare(b.prenom, 'fr'))
     .map((entry, index) => ({ rang: index + 1, ...entry }))
 
-  const processed: string[] = []
-  const skipped: string[] = []
-  const errors: { user: string; error: string }[] = []
+  // Résultat typé par utilisateur : permet d'agréger proprement après
+  // Promise.allSettled (le traitement de chaque utilisateur ne rejette jamais,
+  // il retourne son issue ; l'isolation des erreurs est garantie par le
+  // try/catch interne).
+  type UserResult =
+    | { status: 'processed'; name: string }
+    | { status: 'skipped'; name: string }
+    | { status: 'error'; name: string; error: string }
 
-  for (const profile of profiles as Profile[]) {
+  const processUser = async (profile: Profile): Promise<UserResult> => {
     try {
       const programStart = process.env.PROGRAM_START_DATE!
       const weekNumber = Math.max(1, getProgramWeek(programStart))
@@ -88,8 +99,7 @@ export async function GET(req: NextRequest) {
 
       if (existingReport?.email_sent_at) {
         console.log(`Skipped ${profile.first_name}: email already sent this week`)
-        skipped.push(profile.first_name)
-        continue
+        return { status: 'skipped', name: profile.first_name }
       }
 
       const [
@@ -241,11 +251,31 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      processed.push(profile.first_name)
+      return { status: 'processed', name: profile.first_name }
     } catch (err) {
       console.error(`Error processing ${profile.first_name}:`, err)
-      errors.push({ user: profile.first_name, error: String(err) })
+      return { status: 'error', name: profile.first_name, error: String(err) }
     }
+  }
+
+  // Promise.allSettled (et non Promise.all) : un rejet inattendu d'une tâche
+  // n'interrompt pas les autres. En pratique processUser ne rejette jamais
+  // (try/catch interne), mais la garantie reste utile.
+  const settled = await Promise.allSettled((profiles as Profile[]).map(processUser))
+
+  const processed: string[] = []
+  const skipped: string[] = []
+  const errors: { user: string; error: string }[] = []
+
+  for (const s of settled) {
+    if (s.status === 'rejected') {
+      errors.push({ user: 'unknown', error: String(s.reason) })
+      continue
+    }
+    const r = s.value
+    if (r.status === 'processed') processed.push(r.name)
+    else if (r.status === 'skipped') skipped.push(r.name)
+    else errors.push({ user: r.name, error: r.error })
   }
 
   return NextResponse.json({

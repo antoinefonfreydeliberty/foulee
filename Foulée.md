@@ -669,6 +669,10 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 | **15/07/26** | **Prompt rapport : semaine sans sortie → demander les séances non notées** | `weekly_checkins` vérifiée vide (jamais utilisée, ressenti/douleurs viennent en réalité de `training_logs`). Dans `buildWeeklyReportPrompt`, `noData` scindé en `isFirstWeekWelcome` (accueil semaine 1) et `noSessionsLogged` (semaine >1) : le coach demande alors, sans culpabiliser, si des sorties ont été faites sans être notées et invite à les ajouter (Journal ou check-in), sans jamais parler de « programme qui démarre » |
 | **15/07/26** | **Absence prolongée : vision longue + bouton check-in** | Cron calcule `noSessionStreak` (semaines consécutives sans sortie, depuis tous les `training_logs` du programme). Si ≥ 2, le coach évoque explicitement l'absence prolongée avec recul. Email : quand 0 séance loggée, CTA principal « Faire mon check-in » (→ `/dashboard/checkin`, param `checkinLink`) + lien secondaire dashboard. Schéma `weekly_checkins` réaligné dans la doc. Params `noSessionStreak`/`checkinLink` optionnels (le build racine type-check aussi `foulee_pro/`) |
 | **18/07/26** | **Classement nominatif dans l'email hebdomadaire** | Tableau de classement des 4 coureurs par km de la semaine (médailles 🥇🥈🥉 + « 4. »), identique dans les 4 emails, en fin d'email avant le footer. Choix : **calcul déterministe en code, aucun nouvel appel Claude**. Le cron agrège `training_logs` via **une seule requête Supabase par run** (avant la boucle, `createAdminClient`, même fenêtre `weekStart`→`nextWeekStart` que le rapport individuel), trie km↓/sorties↓/prénom. Type `ClassementEntry`. Seule l'évocation personnelle du coach passe par Claude, en enrichissant le prompt `coach_analysis` existant (contexte `toi`/`autres` + consigne « tu/toi » pour le destinataire, prénom à la 3e personne pour les autres). Un coureur à 0 km reste affiché (donnée agrégée réelle, pas `--`) |
+| **28/07/26** | **Cron semaine 7 : 2 échecs distincts diagnostiqués** | Le cron du 26/07 (semaine 7) a échoué pour 2 coureurs. **Hugo** : `Truncated JSON in Claude response (unbalanced brackets)` (le bug extractJSON intermittent, jamais retenté de façon fiable). **Alix** : la fonction cron entière tuée par la plateforme (`Vercel Runtime Timeout Error: Task timed out after 300 seconds`) avant la fin du traitement **séquentiel** (le risque « Timing cron sur Hobby » qui se matérialise). Leurs séances existaient dans `training_logs` ; seuls rapport + email manquaient. |
+| **28/07/26** | **Fix A : retry ciblé sur JSON tronqué** | `lib/claude/client.ts` : ajout de `isTruncatedJsonError()` + `callClaudeWithRetry` accorde un **budget de retries dédié** au JSON tronqué (jusqu'à 2 essais supplémentaires, délai court fixe 800 ms) AVANT de retomber sur le backoff générique. Constat au passage : la version précédente retentait déjà **toute** erreur 3× (donc le JSON tronqué aussi), mais sans traitement explicite ni marge dédiée. Comportement des autres types d'erreurs **inchangé**. Isolation par utilisateur conservée. |
+| **28/07/26** | **Fix B : cron parallélisé (`Promise.allSettled`)** | `app/api/cron/weekly-report/route.ts` : la boucle séquentielle `for...of` devient une fonction `processUser` exécutée en parallèle via `Promise.allSettled` (pas `Promise.all` : un rejet n'interrompt pas les autres). Le temps mural ne dépend plus de la SOMME mais du plus long. `try/catch` interne conservé (isolation par utilisateur). Compteur `processed` recalculé proprement depuis les résultats agrégés (bug cosmétique corrigé au passage). `export const maxDuration = 300` ajouté (= plafond effectif déjà appliqué par la plateforme, à confirmer côté plan Vercel). |
+| **28/07/26** | **Rattrapage one-shot semaine 7 (Hugo, Alix)** | `scripts/send-catchup-week7.mjs` (modèle `send-invitations.mjs`, lancé via `npx tsx`, imports dynamiques après `dotenv`). **Réutilise** la logique du cron (mêmes fonctions prompt/stats/HTML, même classement calculé pour la semaine 7). Cible **uniquement** Hugo et Alix (jamais Antoine/Rémi). Garde-fou anti double-envoi (skip si une ligne `weekly_reports` existe déjà en semaine 7, réexécutable). `--dry-run` par défaut, `--send` pour l'exécution réelle. Bandeau de rattrapage en tête d'email via nouveau param optionnel `catchUpNotice?` de `buildEmailHtml` (le cron ne le passe jamais → parcours normal inchangé ; texte passé par `sanitizeDashes()`). Vérification finale `email_sent_at` en console. |
 
 ---
 
@@ -717,17 +721,16 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 
 ### Erreur extractJSON intermittente sur le cron
 
-- **Statut :** Observée sur Alix le 14/06 au premier passage, résolue au deuxième
-- **Cause :** Réponse Claude tronquée ou malformée sur certains appels
-- **Mitigation actuelle :** L’idempotence permet de relancer le cron sans double envoi
-- **Fix possible :** Augmenter `max_tokens` dans l’appel Claude du cron, ou ajouter un retry automatique par utilisateur
+- **Statut :** ⚠️ S'est de nouveau matérialisée sur **Hugo en semaine 7** (26/07). **Retry ciblé implémenté le 28/07** (`isTruncatedJsonError` + budget dédié dans `callClaudeWithRetry`) — en attente de validation/déploiement d'Antoine.
+- **Cause :** Réponse Claude tronquée sur certains appels (JSON coupé, brackets déséquilibrés). Aggravé par `max_tokens: 2000`, potentiellement juste pour certains rapports.
+- **Mitigation actuelle :** L'idempotence permet de relancer le cron sans double envoi ; retry dédié désormais dans le code.
+- **Fix restant possible si récidive :** Augmenter `max_tokens` dans l'appel Claude du cron (le retry seul ne suffit pas si la troncature est déterministe plutôt qu'intermittente).
 
 ### Compteur `processed` dans la réponse cron
 
-- **Statut :** Bug confirmé — cosmétique uniquement
-- **Cause :** Le compteur n’est pas incrémenté correctement pour tous les utilisateurs traités
-- **Impact :** Aucun sur le fonctionnement réel — `email_sent_at` reste la source de vérité
-- **Fix possible :** Corriger le compteur dans `app/api/cron/weekly-report/route.ts`
+- **Statut :** ✅ Corrigé le 28/07 lors du refactor `Promise.allSettled` (compteurs recalculés depuis les résultats agrégés). En attente de déploiement.
+- **Cause historique :** Le compteur n'était pas incrémenté correctement pour tous les utilisateurs traités.
+- **Impact :** Aucun sur le fonctionnement réel — `email_sent_at` reste la source de vérité.
 
 ### Check-in accessible uniquement par URL
 
@@ -737,9 +740,9 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 
 ### Timing cron sur Hobby
 
-- **Statut :** Risque théorique non déclenché (cron 14/06 a fonctionné en ~34 min pour 2 users)
-- **Cause :** Timeout 30s, traitement séquentiel avec Claude
-- **Mitigation :** `Promise.all` si problème constaté
+- **Statut :** ⚠️ Risque **matérialisé** en semaine 7 (26/07) : timeout à 300 s ayant tué le run avant la fin du traitement d'Alix (dernière de la boucle séquentielle). **Parallélisé le 28/07** via `Promise.allSettled` — en attente de déploiement.
+- **Cause :** Traitement séquentiel avec Claude → temps mural = somme des utilisateurs. Le plafond effectif observé côté plateforme est 300 s (et non 30 s comme indiqué plus haut : à vérifier dans le dashboard Vercel).
+- **Mitigation :** Parallélisation en place. `maxDuration = 300` déclaré explicitement dans la route. À surveiller si le nombre d'utilisateurs augmente fortement (limite de concurrence des appels Claude).
 
 ### Fichiers résiduels dans `public/`
 

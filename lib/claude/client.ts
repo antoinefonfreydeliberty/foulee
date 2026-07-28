@@ -69,17 +69,42 @@ export const extractJSON = (text: string): unknown => {
   }
 }
 
+// Détecte l'erreur intermittente de JSON tronqué / brackets déséquilibrés
+// levée par extractJSON quand la réponse Claude est coupée (cf. Foulée.md,
+// observée sur le cron : Alix le 14/06, Hugo semaine 7). Retenter à l'identique
+// suffit le plus souvent à obtenir une réponse complète.
+export const isTruncatedJsonError = (err: unknown): boolean => {
+  const msg = err instanceof Error ? err.message : String(err)
+  return /Truncated JSON in Claude response|unbalanced brackets/i.test(msg)
+}
+
 export async function callClaudeWithRetry<T>(
   fn: () => Promise<T>,
   retries = 3
 ): Promise<T> {
-  for (let attempt = 0; attempt < retries; attempt++) {
+  // Budget de retries DÉDIÉ au JSON tronqué, en plus du budget générique.
+  // On lui accorde jusqu'à 2 nouveaux essais avec un court délai fixe AVANT de
+  // retomber dans la politique de retry générique (backoff exponentiel), afin de
+  // maximiser les chances d'obtenir un JSON complet sur ce bug intermittent.
+  const maxTruncatedRetries = 2
+  let truncatedRetries = 0
+  let genericAttempts = 0
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
     try {
       return await fn()
     } catch (err) {
-      if (attempt === retries - 1) throw err
-      await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000))
+      if (isTruncatedJsonError(err) && truncatedRetries < maxTruncatedRetries) {
+        truncatedRetries++
+        await new Promise(r => setTimeout(r, 800))
+        continue
+      }
+      // Politique générique inchangée pour les autres types d'erreurs :
+      // `retries` tentatives au total, backoff exponentiel 1s puis 2s.
+      genericAttempts++
+      if (genericAttempts >= retries) throw err
+      await new Promise(r => setTimeout(r, Math.pow(2, genericAttempts - 1) * 1000))
     }
   }
-  throw new Error('Max retries exceeded')
 }
