@@ -141,7 +141,10 @@ export async function GET(req: NextRequest) {
       const reportResult = await callClaudeWithRetry(async () => {
         const msg = await anthropic.messages.create({
           model: MODEL,
-          max_tokens: 2000,
+          // 4000 (et non 2000) : certains rapports (ex. Hugo semaine 7) dépassaient
+          // 2000 tokens de sortie -> JSON tronqué DÉTERMINISTE que le retry seul ne
+          // corrige pas. Marge suffisante pour analyse + tips + programme + notes.
+          max_tokens: 4000,
           temperature: 0.7,
           system: buildSystemPrompt(profile, process.env.PROGRAM_START_DATE),
           messages: [{

@@ -221,7 +221,7 @@ async function processCatchUp(profile) {
   const reportResult = await callClaudeWithRetry(async () => {
     const msg = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 2000,
+      max_tokens: 4000,   // identique au cron : évite le JSON tronqué déterministe (ex. Hugo)
       temperature: 0.7,
       system: buildSystemPrompt(profile, PROGRAM_START),
       messages: [{
