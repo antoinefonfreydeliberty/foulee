@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         .from('coach_conversations')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(50),
       supabase
         .from('weekly_checkins')
@@ -98,7 +98,11 @@ export async function POST(req: NextRequest) {
         .order('date', { ascending: true }),
     ])
 
-    const messages = (history ?? []) as CoachConversation[]
+    // La requête ci-dessus trie en `descending` + `limit(50)` pour retenir les 50
+    // messages les PLUS RÉCENTS (et non les 50 plus anciens). On réinverse ici en
+    // ordre chronologique croissant, car l'API Claude attend l'historique dans cet
+    // ordre et le mapping vers `conversationHistory` suppose déjà cet ordre.
+    const messages = ((history ?? []) as CoachConversation[]).slice().reverse()
     const currentSessions = (program?.sessions ?? []) as TrainingSession[]
     const trainingHistory = buildTrainingHistorySummary(
       (logsData ?? []) as RawLog[],
