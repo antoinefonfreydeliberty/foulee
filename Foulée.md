@@ -148,8 +148,11 @@ Les apps de running génériques (Strava, Nike Run Club) ne connaissent pas le c
 ### Rapports hebdomadaires
 
 - Générés par le cron chaque dimanche
-- Stockés dans `weekly_reports`
-- Visualisation graphique dans l’app (Sem. / Mois / Saison)
+- Stockés dans `weekly_reports` (texte qualitatif : `coach_analysis`, `coach_tips`, `next_week_program`)
+- Page Rapports : hero distance totale, graphique km/semaine, cartes accordéon « Bilans hebdomadaires »
+- Les chiffres affichés (distance totale, km/sorties/allure par semaine) sont recalculés en direct depuis `training_logs`, jamais lus depuis la colonne figée `weekly_reports.stats` (une séance saisie après le cron de sa semaine est donc comptée correctement)
+- Cartes et barres du graphique uniquement pour les semaines ayant déjà un rapport ; barres cliquables (tap → ouvre et scrolle vers la carte de la semaine)
+- Pas de sélecteur de période (les boutons Sem. / Mois / Saison, non fonctionnels, ont été supprimés)
 
 ### Email hebdomadaire (cron)
 
@@ -676,6 +679,7 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 | **28/07/26** | **Rattrapage one-shot semaine 7 (Hugo, Alix)** | `scripts/send-catchup-week7.mjs` (modèle `send-invitations.mjs`, lancé via `npx tsx`, imports dynamiques après `dotenv`). **Réutilise** la logique du cron (mêmes fonctions prompt/stats/HTML, même classement calculé pour la semaine 7). Cible **uniquement** Hugo et Alix (jamais Antoine/Rémi). Garde-fou anti double-envoi (skip si une ligne `weekly_reports` existe déjà en semaine 7, réexécutable). `--dry-run` par défaut, `--send` pour l'exécution réelle. Bandeau de rattrapage en tête d'email via nouveau param optionnel `catchUpNotice?` de `buildEmailHtml` (le cron ne le passe jamais → parcours normal inchangé ; texte passé par `sanitizeDashes()`). Vérification finale `email_sent_at` en console. |
 | **29/07/26** | **Fix mémoire chat : tri de l'historique `coach_conversations`** | La requête de `route.ts` chargeait les 50 messages les plus anciens (`limit(50)`, tri ascendant, sans offset) au lieu des 50 plus récents. Au-dela d'une cinquantaine de messages cumules, le coach ne voyait plus jamais les echanges recents, d'ou l'impression de memoire courte signalee par Alix. Correctif : tri descendant + limit 50, puis inversion en JS pour repasser en ordre chronologique avant l'appel Claude. |
 | **10/08/26** | **Journal : détail d'une séance en lecture seule** | Retour de Hugo : impossible de revoir le détail d'une séance. Chaque carte de l'historique (`components/training/LogForm.tsx`) devient un accordéon dépliable en place, réutilisant le pattern visuel de « Bilans hebdomadaires » (`RapportItem`). Détail lecture seule : date, distance, durée (min + sec), allure, ressenti (emoji + libellé + niveau), `pain_notes`, `notes` si renseignée. `notes` ajouté au `select` de `app/dashboard/log/page.tsx` (`duration_minutes` déjà présent). Aucune nouvelle route API, aucun nouvel appel Supabase, aucun bouton édition/suppression. |
+| **10/08/26** | **Rapports : suppression des onglets, chiffres live, barres cliquables** | 3 changements sur la page Rapports (retour Antoine). **(1)** Suppression des boutons Sem./Mois/Saison (non fonctionnels, aucun état de période conservé). **(2)** Tous les chiffres affichés recalculés en direct depuis `training_logs` au lieu de `weekly_reports.stats` figé : hero = somme de tous les logs du programme ; par carte/barre = fenêtre `[week_start, week_start + 7j[` (identique au cron), allure via `calcPace(totalKm, totalMin)` (même formule que le cron, non réinventée). Corrige le cas d'une séance saisie après le cron de sa semaine (ex. Hugo S8 : 19,5 km / 2 sorties au lieu de 8,0 / 1 figé ; total Hugo 88,3 / 9 au lieu de 64,2 / 7). Cartes/barres uniquement pour les semaines ayant un rapport ; texte qualitatif (`coach_analysis`) toujours lu depuis `weekly_reports`, aucun appel Claude. **(3)** Barres du graphique cliquables : tap → ouvre + scrolle vers la carte de la semaine. État d'ouverture de l'accordéon remonté de `RapportItem` (désormais contrôlé) vers un nouveau wrapper client `RapportsClient`, source unique partagée par les cartes et le graphique. `page.tsx` devient un server component qui calcule les stats live et passe des props sérialisables. |
 
 ---
 

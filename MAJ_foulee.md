@@ -5,6 +5,30 @@ Fichier de changelog évolutif de l'application **Foulée** (scope : foulée act
 
 ---
 
+## 2026-08-10 (suite) — Rapports : suppression des onglets, chiffres live, barres cliquables
+
+- **Origine :** retour d'Antoine. Remplace la demande précédente (`instructions_claude_code_bugs_rapports.md`) qui voulait réparer les onglets Sem./Mois/Saison : décision changée, ces boutons sont **supprimés**, pas réparés. Le bug des chiffres figés (jamais corrigé lors de la 1re tentative) est traité ici.
+- **(1) Suppression des onglets (`RapportsClient.tsx`) :** les 3 boutons Sem./Mois/Saison retirés du header. Aucun état de sélection de période conservé ni affiché ailleurs.
+- **(2) Chiffres recalculés en direct depuis `training_logs` (`app/dashboard/rapports/page.tsx`) :** plus aucun nombre lu depuis `weekly_reports.stats`.
+  - **Hero « Distance totale »** = somme de tous les `training_logs` de l'utilisateur depuis le début du programme (équivalent au total du Journal). Le badge « X semaines de programme » reste basé sur la semaine courante (`getProgramWeek`).
+  - **Graphique + cartes** = uniquement les semaines ayant déjà une ligne `weekly_reports`. Pour chacune, distance / nb sorties / allure recalculés depuis `training_logs` sur la fenêtre `[week_start, week_start + 7j[` — **strictement identique** à celle du cron. Allure via `calcPace(totalKm, totalMin)`, **même formule que le cron** (non réinventée). Semaine à 0 sortie → `--` (et allure `--'--"` conservée comme avant).
+  - Le texte qualitatif (`coach_analysis`) reste lu depuis `weekly_reports`. **Aucun appel Claude.**
+  - Une seule requête `training_logs` (tous les logs depuis le début du programme), agrégée en JS pour le hero et par semaine.
+- **(3) Barres du graphique cliquables :** tap sur une barre → ouvre et scrolle vers la carte de la semaine correspondante. L'état d'ouverture de l'accordéon est **remonté** de `RapportItem` (rendu contrôlé via props `open`/`onToggle`, + `id` d'ancrage) vers `RapportsClient`, qui détient une source unique partagée par les cartes et le graphique (pas de logique dupliquée). Barre sans carte (semaine courante sans rapport, semaine future) → aucune barre générée, donc aucune action.
+- **Architecture :** `page.tsx` devient un pur server component (fetch + calcul des stats live) qui passe des props sérialisables à un nouveau composant client `RapportsClient` (rendu + interactivité).
+- **Vérification chiffrée en base (SQL read-only, avant/après) :**
+  - **Hugo** — total **88,3 km / 9 sorties** (au lieu de 64,2 / 7 figé) ; **S8 (27/07-02/08) 19,5 km / 2 sorties** (au lieu de 8,0 / 1) ; S7 24,1 / 3 et S9 32,1 / 3 inchangés. (Écart hero vs cartes = 1 sortie de 12,6 km en semaine 10 courante, sans rapport → comptée au total, pas en carte.)
+  - **Antoine (témoin)** — total **130,4 km / 13 sorties** inchangé ; live === `stats` figé sur **toutes** ses semaines → aucune carte ne bouge.
+- **Vérif technique :** `npx tsc --noEmit` OK. Preview visuelle (données Hugo) : onglets absents, chiffres corrects, clic barre S8 → carte S8 dépliée avec `coach_analysis`.
+
+### Fichiers modifiés
+
+- `app/dashboard/rapports/page.tsx` (réécrit : server component, calcul live)
+- `app/dashboard/rapports/RapportsClient.tsx` (nouveau : rendu + interactivité, état d'ouverture partagé)
+- `app/dashboard/rapports/RapportItem.tsx` (accordéon rendu contrôlé + id d'ancrage)
+
+---
+
 ## 2026-08-10 — Journal : détail d'une séance en lecture seule (accordéon)
 
 - **Origine :** retour de Hugo, impossible de revoir le détail d'une séance déjà enregistrée dans le Journal. Deux champs capturés à la saisie n'étaient visibles nulle part dans la liste : la durée (`duration_minutes`) et les notes libres (`notes`).

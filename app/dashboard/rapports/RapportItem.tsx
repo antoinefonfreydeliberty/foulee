@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { formatWeekRange } from '@/lib/utils/dates'
 
 type Stats = {
@@ -15,16 +14,19 @@ type Report = {
   week_start: string
   coach_analysis: string
   stats: Stats | null
-  generated_at: string
 }
 
 type Props = {
   report: Report
   coachName: string
+  open: boolean
+  onToggle: () => void
 }
 
-export const RapportItem = ({ report, coachName }: Props) => {
-  const [open, setOpen] = useState(false)
+// Accordéon contrôlé : l'état d'ouverture est remonté au parent (RapportsClient)
+// pour qu'un clic sur une barre du graphique puisse ouvrir + scroller la carte.
+// L'id sert d'ancre de scroll depuis le graphique.
+export const RapportItem = ({ report, coachName, open, onToggle }: Props) => {
   const stats    = report.stats ?? {}
   const initial  = coachName.charAt(0).toUpperCase()
   const distance = stats.distance && stats.distance > 0 ? `${Number(stats.distance).toFixed(1)} km` : '--'
@@ -32,9 +34,9 @@ export const RapportItem = ({ report, coachName }: Props) => {
   const pace     = stats.avg_pace ?? '--'
 
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid #DDD7CE', borderRadius: 14, overflow: 'hidden' }}>
+    <div id={`rapport-${report.week_start}`} style={{ background: '#FFFFFF', border: '1px solid #DDD7CE', borderRadius: 14, overflow: 'hidden', scrollMarginTop: 16 }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={onToggle}
         style={{
           width: '100%', padding: '14px 15px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
