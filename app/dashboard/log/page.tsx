@@ -16,7 +16,7 @@ export default async function LogPage() {
       .single(),
     supabase
       .from('training_logs')
-      .select('id, date, distance_km, duration_minutes, pace_per_km, feeling, pain_notes')
+      .select('id, date, distance_km, duration_minutes, pace_per_km, feeling, pain_notes, notes')
       .eq('user_id', user.id)
       .order('date', { ascending: false }),
   ])

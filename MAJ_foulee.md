@@ -5,6 +5,23 @@ Fichier de changelog évolutif de l'application **Foulée** (scope : foulée act
 
 ---
 
+## 2026-08-10 — Journal : détail d'une séance en lecture seule (accordéon)
+
+- **Origine :** retour de Hugo, impossible de revoir le détail d'une séance déjà enregistrée dans le Journal. Deux champs capturés à la saisie n'étaient visibles nulle part dans la liste : la durée (`duration_minutes`) et les notes libres (`notes`).
+- **Fix (`components/training/LogForm.tsx`) :** chaque carte de l'historique des sorties devient un accordéon dépliable en place, en **réutilisant le même pattern visuel que « Bilans hebdomadaires »** (`RapportItem`) : bouton cliquable, chevron dans un cercle qui pivote, section de détail avec `borderTop`. Nouveau sous-composant `LogHistoryCard` (état `open` local, comme `RapportItem`) + helpers `formatDuration` et `formatDistance`.
+- **Détail affiché (lecture seule) :** date complète, distance, durée (décomposée min + sec), allure, ressenti (emoji + libellé + niveau), douleur ou gêne (`pain_notes`), notes libres (`notes`, uniquement si renseignées). En-tête replié : date + distance + allure + emoji de ressenti + chevron (les douleurs, avant affichées dans l'en-tête, passent dans le détail déplié pour garder l'en-tête sobre, cohérent avec `RapportItem`).
+- **Durée :** `duration_minutes` est toujours stocké en **minutes entières** (Journal `Math.round`, check-in `parseInt`). `formatDuration` décompose quand même en min + sec et n'affiche jamais un « 0 s » trompeur (respect de la convention « jamais de faux zéro »).
+- **Chargement des données (`app/dashboard/log/page.tsx`) :** ajout de `notes` au `select` existant (`duration_minutes` y était déjà). **Aucune nouvelle route API, aucun nouvel appel Supabase, aucun bouton de modification/suppression** — lecture seule stricte.
+- **Conventions respectées :** donnée absente affichée en `--` (jamais `0 km` ni `0 min`) ; aucun tiret cadratin/demi-cadratin dans les textes (usage du point médian `·`) ; style aligné sur l'existant du fichier (hex en dur, comme `RapportItem`/`LogForm`).
+- **Vérif :** `npx tsc --noEmit` OK (y compris `foulee_pro/`, non modifié).
+
+### Fichiers modifiés
+
+- `components/training/LogForm.tsx`
+- `app/dashboard/log/page.tsx`
+
+---
+
 ## 2026-07-18 — Classement nominatif de la semaine dans l'email hebdomadaire
 
 - **Objectif :** ajouter en fin d'email (juste avant le pied de page, après le programme de la semaine suivante) un tableau de classement des 4 coureurs par km parcourus sur la semaine, identique dans les 4 emails, plus une évocation personnelle du coach sur la position du destinataire, intégrée à `coach_analysis`.

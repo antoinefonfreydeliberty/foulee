@@ -1,6 +1,6 @@
 # Foulée
 
-*Mis à jour le 15 juillet 2026*
+*Mis à jour le 10 août 2026*
 
 ---
 
@@ -103,6 +103,7 @@ Les apps de running génériques (Strava, Nike Run Club) ne connaissent pas le c
 - Formulaire de saisie : date, distance, durée (min + sec), allure calculée auto, ressenti (1-5), douleurs, notes libres
 - Calcul allure : `calcPace(distance, duration)` → min/km
 - Historique des séances passées affiché sous le formulaire, triées date desc
+- Chaque carte de l'historique est un accordéon dépliable en place (lecture seule, même pattern visuel que les Bilans hebdomadaires) : au tap, détail complet de la séance (date, distance, durée, allure, ressenti, douleurs, notes libres)
 - Affichage  si aucune donnée (jamais `0 km`)
 - Toutes les séances (journal + check-in) convergent dans `training_logs` et apparaissent ici
 
@@ -674,6 +675,7 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 | **28/07/26** | **Fix B : cron parallélisé (`Promise.allSettled`)** | `app/api/cron/weekly-report/route.ts` : la boucle séquentielle `for...of` devient une fonction `processUser` exécutée en parallèle via `Promise.allSettled` (pas `Promise.all` : un rejet n'interrompt pas les autres). Le temps mural ne dépend plus de la SOMME mais du plus long. `try/catch` interne conservé (isolation par utilisateur). Compteur `processed` recalculé proprement depuis les résultats agrégés (bug cosmétique corrigé au passage). `export const maxDuration = 300` ajouté (= plafond effectif déjà appliqué par la plateforme, à confirmer côté plan Vercel). |
 | **28/07/26** | **Rattrapage one-shot semaine 7 (Hugo, Alix)** | `scripts/send-catchup-week7.mjs` (modèle `send-invitations.mjs`, lancé via `npx tsx`, imports dynamiques après `dotenv`). **Réutilise** la logique du cron (mêmes fonctions prompt/stats/HTML, même classement calculé pour la semaine 7). Cible **uniquement** Hugo et Alix (jamais Antoine/Rémi). Garde-fou anti double-envoi (skip si une ligne `weekly_reports` existe déjà en semaine 7, réexécutable). `--dry-run` par défaut, `--send` pour l'exécution réelle. Bandeau de rattrapage en tête d'email via nouveau param optionnel `catchUpNotice?` de `buildEmailHtml` (le cron ne le passe jamais → parcours normal inchangé ; texte passé par `sanitizeDashes()`). Vérification finale `email_sent_at` en console. |
 | **29/07/26** | **Fix mémoire chat : tri de l'historique `coach_conversations`** | La requête de `route.ts` chargeait les 50 messages les plus anciens (`limit(50)`, tri ascendant, sans offset) au lieu des 50 plus récents. Au-dela d'une cinquantaine de messages cumules, le coach ne voyait plus jamais les echanges recents, d'ou l'impression de memoire courte signalee par Alix. Correctif : tri descendant + limit 50, puis inversion en JS pour repasser en ordre chronologique avant l'appel Claude. |
+| **10/08/26** | **Journal : détail d'une séance en lecture seule** | Retour de Hugo : impossible de revoir le détail d'une séance. Chaque carte de l'historique (`components/training/LogForm.tsx`) devient un accordéon dépliable en place, réutilisant le pattern visuel de « Bilans hebdomadaires » (`RapportItem`). Détail lecture seule : date, distance, durée (min + sec), allure, ressenti (emoji + libellé + niveau), `pain_notes`, `notes` si renseignée. `notes` ajouté au `select` de `app/dashboard/log/page.tsx` (`duration_minutes` déjà présent). Aucune nouvelle route API, aucun nouvel appel Supabase, aucun bouton édition/suppression. |
 
 ---
 

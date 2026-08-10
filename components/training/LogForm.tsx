@@ -21,6 +21,115 @@ const formatLogDate = (dateStr: string): string => {
   return result.charAt(0).toUpperCase() + result.slice(1)
 }
 
+// Durée stockée en minutes entières (jamais de secondes en base). On décompose
+// tout de même en min + sec pour un affichage robuste, sans « 0 s » trompeur.
+const formatDuration = (minutes: number | null): string => {
+  if (!minutes || minutes <= 0) return '--'
+  const totalSeconds = Math.round(minutes * 60)
+  const m = Math.floor(totalSeconds / 60)
+  const s = totalSeconds % 60
+  return s === 0 ? `${m} min` : `${m} min ${s} s`
+}
+
+const formatDistance = (km: number): string =>
+  km > 0 ? `${km.toFixed(1).replace('.', ',')} km` : '--'
+
+// Ligne label / valeur du détail déplié (lecture seule).
+const DetailRow = ({ label, value, accent }: { label: string; value: string; accent?: boolean }) => (
+  <div style={{
+    display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+    gap: 14, padding: '9px 0', borderBottom: '1px solid #EDE8E1',
+  }}>
+    <span style={{ fontSize: 12, color: '#6E5E55', fontWeight: 600, flexShrink: 0 }}>{label}</span>
+    <span style={{
+      fontSize: 13, fontWeight: 700, textAlign: 'right',
+      color: accent ? '#C5402C' : '#160E08',
+    }}>
+      {value}
+    </span>
+  </div>
+)
+
+// Carte d'une séance passée : accordéon dépliable en place (lecture seule),
+// même pattern visuel que « Bilans hebdomadaires » (RapportItem).
+const LogHistoryCard = ({ log }: { log: TrainingLog }) => {
+  const [open, setOpen] = useState(false)
+  const feelingInfo = log.feeling != null ? FEELING_OPTIONS.find(o => o.value === log.feeling) : undefined
+
+  return (
+    <div style={{ background: '#FFFFFF', border: '1px solid #DDD7CE', borderRadius: 12, overflow: 'hidden' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', padding: '12px 14px',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10,
+          background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 11, fontWeight: 600, color: '#6E5E55', margin: '0 0 4px' }}>
+            {formatLogDate(log.date)}
+          </p>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: '#160E08' }}>
+              {formatDistance(log.distance_km)}
+            </span>
+            {log.pace_per_km && (
+              <span style={{ fontSize: 12, color: '#6E5E55', fontWeight: 600 }}>
+                {log.pace_per_km}/km
+              </span>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {log.feeling != null && (
+            <span style={{ fontSize: 22, lineHeight: 1 }}>
+              {FEELING_EMOJI[log.feeling] ?? ''}
+            </span>
+          )}
+          <div style={{
+            width: 28, height: 28, borderRadius: '50%',
+            background: open ? '#C5402C' : '#EDE8E1',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
+          }}>
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
+              stroke={open ? 'white' : '#6E5E55'} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+            >
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+        </div>
+      </button>
+
+      {open && (
+        <div style={{ padding: '2px 14px 14px', borderTop: '1px solid #DDD7CE' }}>
+          <DetailRow label="Date" value={formatLogDate(log.date)} />
+          <DetailRow label="Distance" value={formatDistance(log.distance_km)} accent />
+          <DetailRow label="Durée" value={formatDuration(log.duration_minutes)} />
+          <DetailRow label="Allure" value={log.pace_per_km ? `${log.pace_per_km}/km` : '--'} />
+          <DetailRow
+            label="Ressenti"
+            value={feelingInfo ? `${feelingInfo.emoji} ${feelingInfo.label} · niveau ${log.feeling}` : '--'}
+          />
+          <DetailRow label="Douleur ou gêne" value={log.pain_notes || '--'} accent={!!log.pain_notes} />
+
+          {log.notes && (
+            <div style={{ paddingTop: 12 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#6E5E55', margin: '0 0 5px' }}>
+                Notes libres
+              </p>
+              <p style={{ fontSize: 13, color: '#160E08', lineHeight: 1.6, whiteSpace: 'pre-line', margin: 0 }}>
+                {log.notes}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 type Props = {
   firstName: string
   logs?: TrainingLog[]
@@ -314,40 +423,7 @@ export default function LogForm({ firstName: _, logs = [] }: Props) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {logs.map(log => (
-              <div key={log.id} style={{
-                background: '#FFFFFF', border: '1px solid #DDD7CE',
-                borderRadius: 12, padding: '12px 14px',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: '#6E5E55', margin: '0 0 4px' }}>
-                      {formatLogDate(log.date)}
-                    </p>
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: '#160E08' }}>
-                        {log.distance_km > 0
-                          ? log.distance_km.toFixed(1).replace('.', ',') + ' km'
-                          : '--'}
-                      </span>
-                      {log.pace_per_km && (
-                        <span style={{ fontSize: 12, color: '#6E5E55', fontWeight: 600 }}>
-                          {log.pace_per_km}/km
-                        </span>
-                      )}
-                    </div>
-                    {log.pain_notes && (
-                      <p style={{ fontSize: 11, color: '#C5402C', margin: '4px 0 0', fontWeight: 500 }}>
-                        {log.pain_notes}
-                      </p>
-                    )}
-                  </div>
-                  {log.feeling != null && (
-                    <span style={{ fontSize: 22, lineHeight: 1 }}>
-                      {FEELING_EMOJI[log.feeling] ?? ''}
-                    </span>
-                  )}
-                </div>
-              </div>
+              <LogHistoryCard key={log.id} log={log} />
             ))}
           </div>
         )}
