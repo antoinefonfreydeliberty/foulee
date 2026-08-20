@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { calcPace } from '@/lib/utils/pace'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { TrainingLog } from '@/types'
 
 const FEELING_OPTIONS = [
@@ -50,11 +51,44 @@ const DetailRow = ({ label, value, accent }: { label: string; value: string; acc
   </div>
 )
 
+const TrashIcon = ({ size = 16, color = '#C5402C' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+    strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 6h18"/>
+    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+    <line x1="10" y1="11" x2="10" y2="17"/>
+    <line x1="14" y1="11" x2="14" y2="17"/>
+  </svg>
+)
+
 // Carte d'une séance passée : accordéon dépliable en place (lecture seule),
 // même pattern visuel que « Bilans hebdomadaires » (RapportItem).
-const LogHistoryCard = ({ log }: { log: TrainingLog }) => {
+// La suppression est proposée dans le détail déplié (évite un bouton imbriqué
+// dans le bouton d'accordéon, invalide en HTML).
+const LogHistoryCard = ({ log, onDeleted }: { log: TrainingLog; onDeleted: (id: string) => void }) => {
   const [open, setOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const feelingInfo = log.feeling != null ? FEELING_OPTIONS.find(o => o.value === log.feeling) : undefined
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    setDeleteError(null)
+
+    const res = await fetch(`/api/training-log/${log.id}`, { method: 'DELETE' })
+
+    if (!res.ok) {
+      setDeleting(false)
+      setConfirmOpen(false)
+      setDeleteError('La suppression a échoué, réessaie.')
+      return
+    }
+
+    // Succès : le parent retire la séance de la liste (cette carte est démontée).
+    onDeleted(log.id)
+  }
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #DDD7CE', borderRadius: 12, overflow: 'hidden' }}>
@@ -124,8 +158,36 @@ const LogHistoryCard = ({ log }: { log: TrainingLog }) => {
               </p>
             </div>
           )}
+
+          {deleteError && (
+            <p style={{ fontSize: 13, color: '#C5402C', margin: '14px 0 0' }}>{deleteError}</p>
+          )}
+
+          <button
+            type="button"
+            onClick={() => { setDeleteError(null); setConfirmOpen(true) }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 7,
+              marginTop: 14, padding: '9px 12px', borderRadius: 10,
+              background: 'rgba(197,64,44,0.10)', border: '1px solid rgba(197,64,44,0.20)',
+              color: '#C5402C', fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            <TrashIcon size={15} />
+            Supprimer la sortie
+          </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Supprimer cette sortie ?"
+        message={`Supprimer la sortie du ${formatLogDate(log.date)} (${formatDistance(log.distance_km)}) ? Cette action est irréversible.`}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+        loading={deleting}
+      />
     </div>
   )
 }
@@ -156,6 +218,9 @@ const fieldLabel: React.CSSProperties = {
 
 export default function LogForm({ firstName: _, logs = [] }: Props) {
   const today = new Date().toISOString().split('T')[0]
+
+  // Liste maintenue en état local pour refléter une suppression sans recharger.
+  const [logList, setLogList] = useState<TrainingLog[]>(logs)
 
   const [form, setForm] = useState({
     date: today,
@@ -413,17 +478,21 @@ export default function LogForm({ firstName: _, logs = [] }: Props) {
           fontSize: 18, fontWeight: 800, color: '#160E08',
           letterSpacing: -0.5, margin: '0 0 12px',
         }}>
-          Mes sorties ({logs.length})
+          Mes sorties ({logList.length})
         </h2>
 
-        {logs.length === 0 ? (
+        {logList.length === 0 ? (
           <p style={{ fontSize: 13, color: '#6E5E55', margin: 0 }}>
             Aucune sortie enregistrée pour l&apos;instant.
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {logs.map(log => (
-              <LogHistoryCard key={log.id} log={log} />
+            {logList.map(log => (
+              <LogHistoryCard
+                key={log.id}
+                log={log}
+                onDeleted={id => setLogList(list => list.filter(l => l.id !== id))}
+              />
             ))}
           </div>
         )}

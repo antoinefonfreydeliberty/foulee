@@ -104,6 +104,7 @@ Les apps de running génériques (Strava, Nike Run Club) ne connaissent pas le c
 - Calcul allure : `calcPace(distance, duration)` → min/km
 - Historique des séances passées affiché sous le formulaire, triées date desc
 - Chaque carte de l'historique est un accordéon dépliable en place (lecture seule, même pattern visuel que les Bilans hebdomadaires) : au tap, détail complet de la séance (date, distance, durée, allure, ressenti, douleurs, notes libres)
+- Suppression d'une séance : dans le détail déplié, bouton « Supprimer la sortie » (icône corbeille) → modal de confirmation (`ConfirmDialog`) → `DELETE /api/training-log/{id}`. En cas de succès la carte disparaît de la liste (état local) ; en cas d'échec la séance reste et un message simple est affiché. Seul point de suppression de l'app (pas dans Groupe, Chat, Rapports)
 - Affichage  si aucune donnée (jamais `0 km`)
 - Toutes les séances (journal + check-in) convergent dans `training_logs` et apparaissent ici
 
@@ -318,12 +319,16 @@ foulee/
 │       ├── conversation/
 │       │   └── route.ts              ← Chat IA streaming (NB: pas /coach/chat)
 │       ├── training-log/
-│       │   └── route.ts              ← Insertion séance dans training_logs
+│       │   ├── route.ts              ← Insertion séance dans training_logs (POST)
+│       │   └── [id]/
+│       │       └── route.ts          ← Suppression d'une séance (DELETE, RLS session)
 │       ├── checkin/
 │       │   └── route.ts              ← Soumission check-in
 │       └── cron/
 │           └── weekly-report/route.ts
 ├── components/
+│   ├── ui/
+│   │   └── ConfirmDialog.tsx         ← Modal de confirmation réutilisable (variables CSS)
 │   ├── layout/
 │   │   └── BottomNav.tsx             ← Nav 5 onglets (SVG inline, pas lucide-react)
 │   ├── checkin/
@@ -679,6 +684,7 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 | **28/07/26** | **Rattrapage one-shot semaine 7 (Hugo, Alix)** | `scripts/send-catchup-week7.mjs` (modèle `send-invitations.mjs`, lancé via `npx tsx`, imports dynamiques après `dotenv`). **Réutilise** la logique du cron (mêmes fonctions prompt/stats/HTML, même classement calculé pour la semaine 7). Cible **uniquement** Hugo et Alix (jamais Antoine/Rémi). Garde-fou anti double-envoi (skip si une ligne `weekly_reports` existe déjà en semaine 7, réexécutable). `--dry-run` par défaut, `--send` pour l'exécution réelle. Bandeau de rattrapage en tête d'email via nouveau param optionnel `catchUpNotice?` de `buildEmailHtml` (le cron ne le passe jamais → parcours normal inchangé ; texte passé par `sanitizeDashes()`). Vérification finale `email_sent_at` en console. |
 | **29/07/26** | **Fix mémoire chat : tri de l'historique `coach_conversations`** | La requête de `route.ts` chargeait les 50 messages les plus anciens (`limit(50)`, tri ascendant, sans offset) au lieu des 50 plus récents. Au-dela d'une cinquantaine de messages cumules, le coach ne voyait plus jamais les echanges recents, d'ou l'impression de memoire courte signalee par Alix. Correctif : tri descendant + limit 50, puis inversion en JS pour repasser en ordre chronologique avant l'appel Claude. |
 | **10/08/26** | **Journal : détail d'une séance en lecture seule** | Retour de Hugo : impossible de revoir le détail d'une séance. Chaque carte de l'historique (`components/training/LogForm.tsx`) devient un accordéon dépliable en place, réutilisant le pattern visuel de « Bilans hebdomadaires » (`RapportItem`). Détail lecture seule : date, distance, durée (min + sec), allure, ressenti (emoji + libellé + niveau), `pain_notes`, `notes` si renseignée. `notes` ajouté au `select` de `app/dashboard/log/page.tsx` (`duration_minutes` déjà présent). Aucune nouvelle route API, aucun nouvel appel Supabase, aucun bouton édition/suppression. |
+| **20/08/26** | **Suppression d'une sortie depuis le Journal** | Alix ne pouvait pas supprimer un doublon enregistré par erreur ; aucune fonctionnalité de suppression n'existait sur `training_logs`. Nouvelle route `DELETE app/api/training-log/[id]/route.ts` (client scopé à la session `createClient`, protection par la policy RLS `own_training_logs` = `auth.uid() = user_id`, cmd ALL couvre DELETE ; 404 si 0 ligne supprimée). Nouveau composant réutilisable `components/ui/ConfirmDialog.tsx` (variables CSS, Echap/clic extérieur = annuler). Bouton de suppression ajouté uniquement dans le détail déplié d'une carte du Journal (`components/training/LogForm.tsx`, `LogHistoryCard`) — pas dans `SessionCard.tsx` qui affiche les séances *prévues* du programme, non l'historique. Isolation RLS entre utilisateurs vérifiée en base (delete d'un autre user = 0 ligne, delete du propriétaire = 1). `weekly_reports.stats` non touché (répercussion sur les rapports au prochain cron, comportement attendu). |
 | **10/08/26** | **Rapports : suppression des onglets, chiffres live, barres cliquables** | 3 changements sur la page Rapports (retour Antoine). **(1)** Suppression des boutons Sem./Mois/Saison (non fonctionnels, aucun état de période conservé). **(2)** Tous les chiffres affichés recalculés en direct depuis `training_logs` au lieu de `weekly_reports.stats` figé : hero = somme de tous les logs du programme ; par carte/barre = fenêtre `[week_start, week_start + 7j[` (identique au cron), allure via `calcPace(totalKm, totalMin)` (même formule que le cron, non réinventée). Corrige le cas d'une séance saisie après le cron de sa semaine (ex. Hugo S8 : 19,5 km / 2 sorties au lieu de 8,0 / 1 figé ; total Hugo 88,3 / 9 au lieu de 64,2 / 7). Cartes/barres uniquement pour les semaines ayant un rapport ; texte qualitatif (`coach_analysis`) toujours lu depuis `weekly_reports`, aucun appel Claude. **(3)** Barres du graphique cliquables : tap → ouvre + scrolle vers la carte de la semaine. État d'ouverture de l'accordéon remonté de `RapportItem` (désormais contrôlé) vers un nouveau wrapper client `RapportsClient`, source unique partagée par les cartes et le graphique. `page.tsx` devient un server component qui calcule les stats live et passe des props sérialisables. |
 
 ---
