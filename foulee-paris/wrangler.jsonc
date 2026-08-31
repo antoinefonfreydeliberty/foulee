@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "semi-cash",
+  // Entrée custom : délègue le fetch à OpenNext + ajoute le handler `scheduled` (cron).
+  "main": "cron-worker.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  // Variables PUBLIQUES uniquement. Les SECRETS (SUPABASE_SERVICE_ROLE_KEY,
+  // BETTING_API_SECRET, SESSION_SECRET, ODDS_CRON_SECRET) sont posés via
+  // `wrangler secret put <NOM>` — JAMAIS ici, jamais commités.
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://vmfflhlizqtmrnyijrwa.supabase.co",
+    "FOULEE_RUNNER_STATS_URL": "https://www.foulee.run/api/betting/runner-stats",
+    "RACE_DATE": "2026-09-13",
+    "BETS_CLOSE_AT": "2026-09-12T23:59:59+02:00"
+  },
+  // Recalcul des cotes toutes les 6 h + fermeture auto au 12/09 (géré côté route).
+  "triggers": {
+    "crons": ["0 */6 * * *"]
+  }
+}

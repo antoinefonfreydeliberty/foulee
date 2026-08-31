@@ -37,6 +37,9 @@
   ],
   "exclude": [
     "node_modules",
-    "design"
+    "design",
+    "cron-worker.ts",
+    ".open-next",
+    ".wrangler"
   ]
 }
