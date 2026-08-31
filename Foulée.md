@@ -453,13 +453,20 @@ Injecté dans chaque appel via `buildConversationPrompt` :
 
 ### Table `profiles`
 
-- `user_id` (UUID, FK → auth.users)
-- `first_name`, `last_name`, `coach_name`, `coach_style`
-- `level` (débutant/intermédiaire/avancé)
-- `goal`, `target_time`
-- `available_days` (array)
-- `max_hr`, `resting_hr`
+Schéma **réel** vérifié en base le 31/08/26 (l'ancienne doc listait des colonnes
+inexistantes : `level`, `target_time`, `available_days`, `max_hr`, `resting_hr`).
+
+- `id` (UUID), `user_id` (UUID, FK → auth.users)
+- `first_name`, `coach_name`, `coach_style`
+- `runner_level` (text — `beginner`/`intermediate`/`experienced`)
+- `weekly_sessions` (int — fréquence hebdo visée à l'onboarding)
+- `best_recent_time` (text libre, nullable — non structuré)
+- `goal_time` (text libre, nullable — ex. « finir sous 2h », non structuré)
+- `availability` (array de text)
+- `injury_history` (text, nullable)
+- `age` (int, nullable), `weight_kg` (numeric, nullable)
 - `onboarding_completed` (boolean)
+- `created_at` (timestamptz)
 
 ### Table `training_programs`
 
@@ -644,6 +651,25 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 
 ---
 
+## Intégrations externes
+
+### Endpoint paris — `GET /api/betting/runner-stats`
+
+- **Fichier :** `app/api/betting/runner-stats/route.ts`. **Consommateur :** la plateforme de paris fictifs `foulee-paris/` (projet séparé, voir section dédiée).
+- **Auth :** header `Authorization: Bearer ${BETTING_API_SECRET}` — nouvelle variable d'env, ajoutée manuellement dans `.env.local` et sur Vercel (**nom uniquement ici, jamais la valeur**). 401 si absent/incorrect, et fail-closed si la variable n'est pas configurée.
+- **Nature :** lecture seule (`createAdminClient`), aucune écriture, aucun cache (`export const dynamic = 'force-dynamic'`).
+- **Contenu :** par profil onboardé — champs bruts (`first_name`, `runner_level`, `weekly_sessions`, `goal_time`, `best_recent_time`) + `weekly_stats` par semaine de programme sur la fenêtre `[week_start, week_start + 7j[` (distance totale, nb sorties, plus longue sortie, allure moyenne pondérée `sum(min)/sum(km)`, nb séances avec douleur, séances prévues, sortie longue prévue) + `current_program_week` + `days_until_race`.
+- **Note donnée :** `planned_long_run_km` matche les DEUX variantes de `type` présentes en base (`sortie_longue` ET `sortie longue`).
+- **Dépendance inverse :** `foulee-paris/` ne touche JAMAIS la base Supabase de Foulée (`anxmkfhxjslyfayixgok`) — uniquement cet endpoint HTTP.
+
+## Plateforme Foulée Paris (`foulee-paris/`)
+
+- **Objectif :** plateforme de paris **100 % fictifs** (aucune valeur réelle) pour le groupe fermé des 4 coureurs + un accès admin, sur les résultats du semi du 13/09/26. Fenêtre de paris fermée le 12/09/26 minuit (Europe/Paris).
+- **Stack :** projet Next.js (App Router) + TypeScript **autonome** — son propre `package.json`, ses propres `node_modules`, jamais mélangé au code racine. Nouvelle base Supabase dédiée. Déploiement Cloudflare Pages (compte `fonfreyde.antoine@gmail.com`), cron pour recalcul des cotes (Monte Carlo, toutes les 6 h) et fermeture automatique des marchés.
+- **Isolation build (critique) :** `foulee-paris/` sera exclu du `tsconfig.json` racine. Ses dépendances distinctes casseraient sinon le `next build` de l'app principale — contrairement à `foulee_pro/`, qui n'est **pas** exclu aujourd'hui mais passe le type-check racine par coïncidence (clone à `package.json`/deps identiques). Build racine à revérifier après création du dossier.
+- **Lien avec Foulée :** lecture seule via l'endpoint `runner-stats` uniquement (voir Intégrations externes).
+- **Statut (31/08/26) :** `foulee-paris/` (« Semi Ca$h ») **blocs 1‑4 faits et vérifiés en live**. Blocs 1‑2 (rappel) : base Supabase dédiée `foulee_paris` (`vmfflhlizqtmrnyijrwa`, eu-west-3), schéma complet (9 tables, RLS deny-all), 4 runners, auth PIN (bcrypt + `jose`), panneau admin, admin Antoine (100 J). **Bloc 3 — moteur de cotes** : `lib/odds/` (fetch `runner-stats` → Riegel → facteurs de forme → Monte Carlo 20 000 tirages graine → cote `round(1/(p·1,07),2)` plancher 1,05), catalogue idempotent (15 marchés / 68 sélections : vainqueur, classement complet 24, 6 face-à-face, 4 temps, 3 déterministes ; « battra son objectif » auto dès objectif saisi), `odds` en ajout seul + snapshots, bouton admin + cron protégé (`ODDS_CRON_SECRET`) qui ferme les marchés au 12/09 minuit Europe/Paris. **Bloc 4 — mise & règlement** : fonctions Postgres `place_wager` (atomique, verrou `FOR UPDATE`, solde jamais négatif) et `settle_market` (idempotent, `settlements.market_id` unique) + vue `current_odds` ; routes `POST /api/wagers` (paris simples), `POST /api/admin/settle` ; pages `/paris` (marchés + `OddsTile` + ticket), `/mon-compte`, `/classement`. Vérifié à la main (proba→cote), end-to-end (écriture DB + idempotence) et en RPC (solde jamais négatif, règlement non rejouable en double). **⚠ Prérequis prod :** l'endpoint `runner-stats` est **non déployé** côté Foulée (prod 404) — vérif faite contre `next dev` local ; à commiter + déployer sur Vercel. **Reste :** bloc 5 (Cloudflare : cron + déploiement). Secrets `BETTING_API_SECRET`/`ODDS_CRON_SECRET` posés dans `foulee-paris/.env.local` (jamais commités). Détail complet et prompt de reprise dans `foulee-paris/foulee-paris.md`.
+
 ## Décisions techniques importantes
 
 | Date | Décision | Raison |
@@ -686,6 +712,7 @@ apple-icon.png, manifest.json, icon-192.png, icon-512.png
 | **10/08/26** | **Journal : détail d'une séance en lecture seule** | Retour de Hugo : impossible de revoir le détail d'une séance. Chaque carte de l'historique (`components/training/LogForm.tsx`) devient un accordéon dépliable en place, réutilisant le pattern visuel de « Bilans hebdomadaires » (`RapportItem`). Détail lecture seule : date, distance, durée (min + sec), allure, ressenti (emoji + libellé + niveau), `pain_notes`, `notes` si renseignée. `notes` ajouté au `select` de `app/dashboard/log/page.tsx` (`duration_minutes` déjà présent). Aucune nouvelle route API, aucun nouvel appel Supabase, aucun bouton édition/suppression. |
 | **20/08/26** | **Suppression d'une sortie depuis le Journal** | Alix ne pouvait pas supprimer un doublon enregistré par erreur ; aucune fonctionnalité de suppression n'existait sur `training_logs`. Nouvelle route `DELETE app/api/training-log/[id]/route.ts` (client scopé à la session `createClient`, protection par la policy RLS `own_training_logs` = `auth.uid() = user_id`, cmd ALL couvre DELETE ; 404 si 0 ligne supprimée). Nouveau composant réutilisable `components/ui/ConfirmDialog.tsx` (variables CSS, Echap/clic extérieur = annuler). Bouton de suppression ajouté uniquement dans le détail déplié d'une carte du Journal (`components/training/LogForm.tsx`, `LogHistoryCard`) — pas dans `SessionCard.tsx` qui affiche les séances *prévues* du programme, non l'historique. Isolation RLS entre utilisateurs vérifiée en base (delete d'un autre user = 0 ligne, delete du propriétaire = 1). `weekly_reports.stats` non touché (répercussion sur les rapports au prochain cron, comportement attendu). |
 | **10/08/26** | **Rapports : suppression des onglets, chiffres live, barres cliquables** | 3 changements sur la page Rapports (retour Antoine). **(1)** Suppression des boutons Sem./Mois/Saison (non fonctionnels, aucun état de période conservé). **(2)** Tous les chiffres affichés recalculés en direct depuis `training_logs` au lieu de `weekly_reports.stats` figé : hero = somme de tous les logs du programme ; par carte/barre = fenêtre `[week_start, week_start + 7j[` (identique au cron), allure via `calcPace(totalKm, totalMin)` (même formule que le cron, non réinventée). Corrige le cas d'une séance saisie après le cron de sa semaine (ex. Hugo S8 : 19,5 km / 2 sorties au lieu de 8,0 / 1 figé ; total Hugo 88,3 / 9 au lieu de 64,2 / 7). Cartes/barres uniquement pour les semaines ayant un rapport ; texte qualitatif (`coach_analysis`) toujours lu depuis `weekly_reports`, aucun appel Claude. **(3)** Barres du graphique cliquables : tap → ouvre + scrolle vers la carte de la semaine. État d'ouverture de l'accordéon remonté de `RapportItem` (désormais contrôlé) vers un nouveau wrapper client `RapportsClient`, source unique partagée par les cartes et le graphique. `page.tsx` devient un server component qui calcule les stats live et passe des props sérialisables. |
+| **31/08/26** | **Endpoint lecture seule `GET /api/betting/runner-stats` + démarrage `foulee-paris/`** | Nouvelle plateforme de paris fictifs (groupe fermé) consommant les stats d'entraînement via HTTP. Endpoint **additif** protégé par `BETTING_API_SECRET` (Bearer, même pattern que le cron), `createAdminClient` lecture seule, agrégation par semaine de programme (fenêtre `[week_start, week_start+7j[`, mêmes bornes que le cron). Vérifié en local contre les totaux réels — tolérance zéro (Alix 14/118,54 · Antoine 19/201,4 · Hugo 18/199 · Rémi 24/153,2), 401 sans/mauvais secret. `planned_long_run_km` matche les DEUX variantes `sortie_longue`/`sortie longue` présentes en base (sinon 13 semaines à `null`). `foulee-paris/` : projet Next.js autonome, isolé du build racine, dépend de Foulée uniquement via cet endpoint. |
 
 ---
 

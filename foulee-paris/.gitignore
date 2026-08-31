@@ -1,0 +1,15 @@
+# deps
+/node_modules
+# next
+/.next
+/out
+# env & secrets (jamais commités)
+.env
+.env.local
+.env*.local
+# cloudflare
+.wrangler
+.open-next
+# misc
+*.log
+.DS_Store

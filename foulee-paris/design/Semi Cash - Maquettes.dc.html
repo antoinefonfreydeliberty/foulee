@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body { margin: 0; background: oklch(0.95 0.003 258); }
+::-webkit-scrollbar { display: none; width: 0; height: 0; }
+a { color: oklch(0.78 0.15 85); text-decoration: none; }
+a:hover { color: oklch(0.7 0.15 85); }
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:56px 32px 96px;font-family:Inter,sans-serif;box-sizing:border-box;">
+  <div style="max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:56px;">
+
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:oklch(0.2 0.01 258);letter-spacing:-0.5px;">Semi Ca$h</div>
+      <div style="font-family:Inter,sans-serif;font-size:15px;color:oklch(0.5 0.01 258);">Direction artistique &amp; maquettes mobiles — plateforme de paris fictifs entre 4 potes, pour le semi-marathon du 13 septembre 2026.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:28px;">
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px;color:oklch(0.2 0.01 258);">Direction artistique</div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:oklch(0.5 0.01 258);text-transform:uppercase;letter-spacing:0.06em;">Palette</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;">
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+            <div style="width:72px;height:72px;border-radius:16px;background:oklch(0.15 0.02 258);border:1px solid oklch(0.85 0.01 258);"></div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.2 0.01 258);">Fond app</div>
+            <div style="font-family:monospace;font-size:10px;color:oklch(0.5 0.01 258);">oklch(.15 .02 258)</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+            <div style="width:72px;height:72px;border-radius:16px;background:oklch(0.24 0.02 258);border:1px solid oklch(0.85 0.01 258);"></div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.2 0.01 258);">Surface / tuiles</div>
+            <div style="font-family:monospace;font-size:10px;color:oklch(0.5 0.01 258);">oklch(.24 .02 258)</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+            <div style="width:72px;height:72px;border-radius:16px;background:oklch(0.32 0.02 258);"></div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.2 0.01 258);">Bordures</div>
+            <div style="font-family:monospace;font-size:10px;color:oklch(0.5 0.01 258);">oklch(.32 .02 258)</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+            <div style="width:72px;height:72px;border-radius:16px;background:oklch(0.78 0.15 85);"></div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.2 0.01 258);">Or — cotes &amp; CTA</div>
+            <div style="font-family:monospace;font-size:10px;color:oklch(0.5 0.01 258);">oklch(.78 .15 85)</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+            <div style="width:72px;height:72px;border-radius:16px;background:oklch(0.78 0.15 290);"></div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.2 0.01 258);">Violet — accent secondaire</div>
+            <div style="font-family:monospace;font-size:10px;color:oklch(0.5 0.01 258);">oklch(.78 .15 290)</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+            <div style="width:72px;height:72px;border-radius:16px;background:oklch(0.72 0.17 145);"></div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.2 0.01 258);">Gain</div>
+            <div style="font-family:monospace;font-size:10px;color:oklch(0.5 0.01 258);">oklch(.72 .17 145)</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+            <div style="width:72px;height:72px;border-radius:16px;background:oklch(0.66 0.19 25);"></div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.2 0.01 258);">Perte</div>
+            <div style="font-family:monospace;font-size:10px;color:oklch(0.5 0.01 258);">oklch(.66 .19 25)</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:oklch(0.5 0.01 258);text-transform:uppercase;letter-spacing:0.06em;">Typographie</div>
+        <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:48px;color:oklch(0.2 0.01 258);letter-spacing:-1px;">1.85</div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;color:oklch(0.5 0.01 258);">Space Grotesk 600/700 — titres, cotes, chiffres clés</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;max-width:340px;">
+            <div style="font-family:Inter,sans-serif;font-size:16px;color:oklch(0.2 0.01 258);line-height:1.5;">Paris 100% fictifs entre potes sur le semi-marathon.</div>
+            <div style="font-family:Inter,sans-serif;font-size:12px;color:oklch(0.5 0.01 258);">Inter 400/600 — texte courant, UI</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:oklch(0.5 0.01 258);text-transform:uppercase;letter-spacing:0.06em;">Composants</div>
+        <div style="background:oklch(0.15 0.02 258);border-radius:20px;padding:24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <dc-import name="OddsTile" label="Antoine" odds="1.85" hint-size="100px,76px" style="width:100px;height:76px;"></dc-import>
+          <dc-import name="OddsTile" label="Antoine" odds="1.85" selected="{{ true }}" hint-size="100px,76px" style="width:100px;height:76px;"></dc-import>
+          <div style="background:oklch(0.78 0.15 85);color:oklch(0.15 0.02 258);font-family:Inter,sans-serif;font-weight:700;font-size:14px;padding:13px 22px;border-radius:12px;">Valider le pari</div>
+          <div style="background:oklch(0.72 0.17 145 / 0.15);color:oklch(0.72 0.17 145);font-family:Inter,sans-serif;font-weight:700;font-size:12px;padding:6px 14px;border-radius:999px;">Gagné</div>
+          <div style="background:oklch(0.66 0.19 25 / 0.15);color:oklch(0.66 0.19 25);font-family:Inter,sans-serif;font-weight:700;font-size:12px;padding:6px 14px;border-radius:999px;">Perdu</div>
+          <div style="width:44px;height:44px;border-radius:50%;background:oklch(0.7 0.14 85);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);">AN</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:32px;">
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px;color:oklch(0.2 0.01 258);">Écrans (mobile)</div>
+
+      <div style="display:flex;gap:36px;flex-wrap:wrap;justify-content:center;">
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+          <div style="background:oklch(0.2 0.01 258);color:oklch(0.97 0.005 258);font-family:Inter,sans-serif;font-weight:600;font-size:13px;padding:6px 16px;border-radius:999px;">1 · Accueil</div>
+          <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="true" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:oklch(0.15 0.02 258);font-family:Inter,sans-serif;">
+              <div style="flex:1;overflow:auto;overflow-x:hidden;scrollbar-width:none;padding:58px 20px 24px;display:flex;flex-direction:column;gap:26px;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:oklch(0.97 0.004 258);letter-spacing:-0.5px;">Semi Ca$h</div>
+                  <div style="font-family:Inter,sans-serif;font-size:13px;color:oklch(0.68 0.01 258);">Paris fictifs entre potes</div>
+                </div>
+
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:20px;padding:22px 16px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.68 0.01 258);text-transform:uppercase;letter-spacing:0.08em;text-align:center;">Semi-marathon le 13 septembre 2026</div>
+                  <div style="display:flex;gap:14px;">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:oklch(0.78 0.15 85);">13</div>
+                      <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.5 0.01 258);">jours</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:oklch(0.97 0.004 258);">04</div>
+                      <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.5 0.01 258);">heures</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:oklch(0.97 0.004 258);">22</div>
+                      <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.5 0.01 258);">min</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="font-family:Inter,sans-serif;font-size:14px;line-height:1.5;color:oklch(0.85 0.006 258);text-align:center;padding:0 4px;">100% fictif, 0% enjeu réel. Chacun démarre avec 100 jetons pour parier sur les perfs des 4 potes le jour de la course. Juste pour le fun et la gloire.</div>
+
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.5 0.01 258);text-transform:uppercase;letter-spacing:0.06em;text-align:center;">Les 4 parieurs</div>
+                  <div style="display:flex;justify-content:center;gap:16px;">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                      <div style="width:44px;height:44px;border-radius:50%;background:oklch(0.7 0.14 85);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);">AN</div>
+                      <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.85 0.006 258);">Antoine</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                      <div style="width:44px;height:44px;border-radius:50%;background:oklch(0.7 0.14 290);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);">HU</div>
+                      <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.85 0.006 258);">Hugo</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                      <div style="width:44px;height:44px;border-radius:50%;background:oklch(0.7 0.14 195);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);">RE</div>
+                      <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.85 0.006 258);">Rémi</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                      <div style="width:44px;height:44px;border-radius:50%;background:oklch(0.7 0.14 35);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);">AL</div>
+                      <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.85 0.006 258);">Alix</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:16px;padding:14px;position:relative;">
+                  <div style="font-family:Inter,sans-serif;font-size:11px;font-weight:600;color:oklch(0.68 0.01 258);text-transform:uppercase;margin-bottom:10px;opacity:0.5;">Aperçu — Vainqueur du groupe</div>
+                  <div style="display:flex;gap:8px;opacity:0.5;">
+                    <div style="flex:1;background:oklch(0.24 0.02 258);border-radius:10px;padding:8px 4px;text-align:center;">
+                      <div style="font-family:Inter,sans-serif;font-size:9px;color:oklch(0.68 0.01 258);">Antoine</div>
+                      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:oklch(0.78 0.15 85);">1.85</div>
+                    </div>
+                    <div style="flex:1;background:oklch(0.24 0.02 258);border-radius:10px;padding:8px 4px;text-align:center;">
+                      <div style="font-family:Inter,sans-serif;font-size:9px;color:oklch(0.68 0.01 258);">Hugo</div>
+                      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:oklch(0.78 0.15 85);">3.20</div>
+                    </div>
+                    <div style="flex:1;background:oklch(0.24 0.02 258);border-radius:10px;padding:8px 4px;text-align:center;">
+                      <div style="font-family:Inter,sans-serif;font-size:9px;color:oklch(0.68 0.01 258);">Rémi</div>
+                      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:oklch(0.78 0.15 85);">4.50</div>
+                    </div>
+                    <div style="flex:1;background:oklch(0.24 0.02 258);border-radius:10px;padding:8px 4px;text-align:center;">
+                      <div style="font-family:Inter,sans-serif;font-size:9px;color:oklch(0.68 0.01 258);">Alix</div>
+                      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:oklch(0.78 0.15 85);">6.00</div>
+                    </div>
+                  </div>
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                    <div style="width:14px;height:11px;border-radius:2px;background:oklch(0.97 0.004 258);position:relative;"><div style="width:9px;height:8px;border:2px solid oklch(0.97 0.004 258);border-bottom:none;border-radius:5px 5px 0 0;position:absolute;top:-8px;left:1px;"></div></div>
+                  </div>
+                </div>
+              </div>
+              <div style="flex-shrink:0;padding:16px 20px 30px;">
+                <div style="background:oklch(0.78 0.15 85);color:oklch(0.15 0.02 258);font-family:Inter,sans-serif;font-weight:700;font-size:15px;text-align:center;padding:15px;border-radius:14px;">Se connecter</div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+          <div style="background:oklch(0.2 0.01 258);color:oklch(0.97 0.005 258);font-family:Inter,sans-serif;font-weight:600;font-size:13px;padding:6px 16px;border-radius:999px;">2 · Connexion</div>
+          <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="true" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:oklch(0.15 0.02 258);font-family:Inter,sans-serif;">
+              <div style="flex:1;overflow:auto;overflow-x:hidden;scrollbar-width:none;padding:58px 20px 24px;display:flex;flex-direction:column;gap:26px;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:oklch(0.97 0.004 258);">Semi Ca$h</div>
+                  <div style="font-family:Inter,sans-serif;font-size:13px;color:oklch(0.68 0.01 258);">Connexion</div>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.68 0.01 258);">Adresse email</div>
+                  <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:12px;padding:14px 16px;font-family:Inter,sans-serif;font-size:15px;color:oklch(0.97 0.004 258);">antoine@gmail.com</div>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.68 0.01 258);text-align:center;">Code à 6 chiffres envoyé à antoine@gmail.com</div>
+                  <div style="display:flex;gap:8px;">
+                    <div style="width:42px;height:52px;border-radius:10px;background:oklch(0.20 0.02 258);border:1.5px solid oklch(0.32 0.02 258);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:oklch(0.97 0.004 258);">4</div>
+                    <div style="width:42px;height:52px;border-radius:10px;background:oklch(0.20 0.02 258);border:1.5px solid oklch(0.32 0.02 258);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:oklch(0.97 0.004 258);">8</div>
+                    <div style="width:42px;height:52px;border-radius:10px;background:oklch(0.20 0.02 258);border:1.5px solid oklch(0.32 0.02 258);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:oklch(0.97 0.004 258);">1</div>
+                    <div style="width:42px;height:52px;border-radius:10px;background:oklch(0.20 0.02 258);border:1.5px solid oklch(0.32 0.02 258);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:oklch(0.97 0.004 258);">2</div>
+                    <div style="width:42px;height:52px;border-radius:10px;background:oklch(0.20 0.02 258);border:2px solid oklch(0.78 0.15 85);display:flex;align-items:center;justify-content:center;"></div>
+                    <div style="width:42px;height:52px;border-radius:10px;background:oklch(0.20 0.02 258);border:1.5px solid oklch(0.32 0.02 258);display:flex;align-items:center;justify-content:center;"></div>
+                  </div>
+                  <div style="font-family:Inter,sans-serif;font-size:12px;color:oklch(0.78 0.15 85);">Renvoyer le code</div>
+                </div>
+              </div>
+              <div style="flex-shrink:0;padding:16px 20px 30px;">
+                <div style="background:oklch(0.78 0.15 85);color:oklch(0.15 0.02 258);font-family:Inter,sans-serif;font-weight:700;font-size:15px;text-align:center;padding:15px;border-radius:14px;">Valider</div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+          <div style="background:oklch(0.2 0.01 258);color:oklch(0.97 0.005 258);font-family:Inter,sans-serif;font-weight:600;font-size:13px;padding:6px 16px;border-radius:999px;">3 · Paris</div>
+          <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="true" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:oklch(0.15 0.02 258);font-family:Inter,sans-serif;">
+              <div style="flex-shrink:0;padding:58px 20px 14px;display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:oklch(0.97 0.004 258);">Paris</div>
+                <div style="background:oklch(0.24 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:999px;padding:6px 12px;display:flex;align-items:center;gap:6px;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:oklch(0.78 0.15 85);"></div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:oklch(0.97 0.004 258);">100 J</div>
+                </div>
+              </div>
+              <div style="flex-shrink:0;display:flex;gap:8px;padding:0 20px 14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;">
+                <div style="background:oklch(0.78 0.15 85);color:oklch(0.15 0.02 258);font-family:Inter,sans-serif;font-weight:600;font-size:12px;padding:8px 14px;border-radius:999px;white-space:nowrap;">Tous</div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);color:oklch(0.85 0.006 258);font-family:Inter,sans-serif;font-weight:600;font-size:12px;padding:8px 14px;border-radius:999px;white-space:nowrap;">Vainqueur</div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);color:oklch(0.85 0.006 258);font-family:Inter,sans-serif;font-weight:600;font-size:12px;padding:8px 14px;border-radius:999px;white-space:nowrap;">Face-à-face</div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);color:oklch(0.85 0.006 258);font-family:Inter,sans-serif;font-weight:600;font-size:12px;padding:8px 14px;border-radius:999px;white-space:nowrap;">Temps</div>
+              </div>
+              <div style="flex:1;overflow:auto;overflow-x:hidden;scrollbar-width:none;padding:0 20px 16px;display:flex;flex-direction:column;gap:16px;">
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+                  <div style="font-family:Inter,sans-serif;font-weight:600;font-size:14px;color:oklch(0.97 0.004 258);">Vainqueur du groupe</div>
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+                    <dc-import name="OddsTile" label="Antoine" odds="1.85" selected="{{ true }}" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="Hugo" odds="3.20" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="Rémi" odds="4.50" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="Alix" odds="6.00" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                  </div>
+                </div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+                  <div style="font-family:Inter,sans-serif;font-weight:600;font-size:14px;color:oklch(0.97 0.004 258);">Face-à-face · Hugo vs Rémi</div>
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+                    <dc-import name="OddsTile" label="Hugo" odds="1.65" selected="{{ true }}" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="Rémi" odds="2.10" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                  </div>
+                </div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+                  <div style="font-family:Inter,sans-serif;font-weight:600;font-size:14px;color:oklch(0.97 0.004 258);">Temps d'arrivée · Antoine</div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                    <dc-import name="OddsTile" label="< 1h45" odds="2.50" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="1h45–2h" odds="1.90" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="> 2h00" odds="3.10" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                  </div>
+                </div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+                  <div style="font-family:Inter,sans-serif;font-weight:600;font-size:14px;color:oklch(0.97 0.004 258);">Dernière place du groupe</div>
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+                    <dc-import name="OddsTile" label="Alix" odds="1.95" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="Rémi" odds="2.80" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="Hugo" odds="3.50" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                    <dc-import name="OddsTile" label="Antoine" odds="5.00" hint-size="100%,74px" style="width:100%;height:74px;"></dc-import>
+                  </div>
+                </div>
+              </div>
+              <div style="flex-shrink:0;background:oklch(0.24 0.02 258);border-top:1px solid oklch(0.32 0.02 258);padding:14px 20px;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:oklch(0.85 0.006 258);">Vainqueur — Antoine</div>
+                    <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:oklch(0.78 0.15 85);">1.85</div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:oklch(0.85 0.006 258);">Face-à-face — Hugo</div>
+                    <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:oklch(0.78 0.15 85);">1.65</div>
+                  </div>
+                </div>
+                <div style="height:1px;background:oklch(0.32 0.02 258);"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;color:oklch(0.68 0.01 258);">Mise</div>
+                  <div style="background:oklch(0.15 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:8px;padding:6px 12px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.97 0.004 258);">10 J</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;color:oklch(0.68 0.01 258);">Gain potentiel</div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:oklch(0.72 0.17 145);">≈ 30 J</div>
+                </div>
+                <div style="background:oklch(0.78 0.15 85);color:oklch(0.15 0.02 258);font-family:Inter,sans-serif;font-weight:700;font-size:14px;text-align:center;padding:13px;border-radius:12px;">Valider le pari</div>
+              </div>
+              <div style="flex-shrink:0;display:flex;justify-content:space-around;padding:10px 12px 26px;border-top:1px solid oklch(0.28 0.02 258);background:oklch(0.15 0.02 258);">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:18px;height:18px;border-radius:5px;background:oklch(0.78 0.15 85);"></div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.78 0.15 85);">Paris</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="display:flex;align-items:flex-end;gap:2px;height:18px;">
+                    <div style="width:4px;height:8px;background:oklch(0.5 0.01 258);border-radius:1px;"></div>
+                    <div style="width:4px;height:14px;background:oklch(0.5 0.01 258);border-radius:1px;"></div>
+                    <div style="width:4px;height:11px;background:oklch(0.5 0.01 258);border-radius:1px;"></div>
+                  </div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.5 0.01 258);">Classement</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:18px;height:18px;border-radius:50%;border:2px solid oklch(0.5 0.01 258);"></div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.5 0.01 258);">Compte</div>
+                </div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+          <div style="background:oklch(0.2 0.01 258);color:oklch(0.97 0.005 258);font-family:Inter,sans-serif;font-weight:600;font-size:13px;padding:6px 16px;border-radius:999px;">4 · Mon compte</div>
+          <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="true" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:oklch(0.15 0.02 258);font-family:Inter,sans-serif;">
+              <div style="flex-shrink:0;padding:58px 20px 14px;display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:oklch(0.97 0.004 258);">Mon compte</div>
+                <div style="width:36px;height:36px;border-radius:50%;background:oklch(0.7 0.14 85);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:oklch(0.15 0.02 258);">AN</div>
+              </div>
+              <div style="flex:1;overflow:auto;overflow-x:hidden;scrollbar-width:none;padding:0 20px 24px;display:flex;flex-direction:column;gap:20px;">
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:18px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.68 0.01 258);text-transform:uppercase;letter-spacing:0.06em;">Solde disponible</div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:40px;color:oklch(0.78 0.15 85);">65 J</div>
+                </div>
+                <div style="display:flex;gap:10px;">
+                  <div style="flex:1;background:oklch(0.20 0.02 258);border-radius:14px;padding:12px;text-align:center;">
+                    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:oklch(0.72 0.17 145);">3</div>
+                    <div style="font-family:Inter,sans-serif;font-size:10px;color:oklch(0.68 0.01 258);margin-top:2px;">Gagnés</div>
+                  </div>
+                  <div style="flex:1;background:oklch(0.20 0.02 258);border-radius:14px;padding:12px;text-align:center;">
+                    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:oklch(0.66 0.19 25);">5</div>
+                    <div style="font-family:Inter,sans-serif;font-size:10px;color:oklch(0.68 0.01 258);margin-top:2px;">Perdus</div>
+                  </div>
+                  <div style="flex:1;background:oklch(0.20 0.02 258);border-radius:14px;padding:12px;text-align:center;">
+                    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:oklch(0.97 0.004 258);">2</div>
+                    <div style="font-family:Inter,sans-serif;font-size:10px;color:oklch(0.68 0.01 258);margin-top:2px;">En cours</div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.5 0.01 258);text-transform:uppercase;letter-spacing:0.06em;">Historique des mises</div>
+                  <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                      <div style="display:flex;flex-direction:column;gap:2px;">
+                        <div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:oklch(0.97 0.004 258);">Vainqueur du groupe — Antoine</div>
+                        <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.5 0.01 258);">24 août · Mise 10 J · Cote 1.85</div>
+                      </div>
+                      <div style="background:oklch(0.72 0.17 145 / 0.15);color:oklch(0.72 0.17 145);font-family:Inter,sans-serif;font-weight:700;font-size:11px;padding:4px 10px;border-radius:999px;white-space:nowrap;">+8,5 J</div>
+                    </div>
+                  </div>
+                  <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                      <div style="display:flex;flex-direction:column;gap:2px;">
+                        <div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:oklch(0.97 0.004 258);">Face-à-face Hugo/Rémi — Rémi</div>
+                        <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.5 0.01 258);">24 août · Mise 15 J · Cote 2.10</div>
+                      </div>
+                      <div style="background:oklch(0.66 0.19 25 / 0.15);color:oklch(0.66 0.19 25);font-family:Inter,sans-serif;font-weight:700;font-size:11px;padding:4px 10px;border-radius:999px;white-space:nowrap;">-15 J</div>
+                    </div>
+                  </div>
+                  <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                      <div style="display:flex;flex-direction:column;gap:2px;">
+                        <div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:oklch(0.97 0.004 258);">Temps d'arrivée Antoine — &lt; 1h45</div>
+                        <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.5 0.01 258);">20 août · Mise 5 J · Cote 2.50</div>
+                      </div>
+                      <div style="background:oklch(0.32 0.02 258);color:oklch(0.68 0.01 258);font-family:Inter,sans-serif;font-weight:700;font-size:11px;padding:4px 10px;border-radius:999px;white-space:nowrap;">En attente</div>
+                    </div>
+                  </div>
+                  <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                      <div style="display:flex;flex-direction:column;gap:2px;">
+                        <div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:oklch(0.97 0.004 258);">Dernière place — Alix</div>
+                        <div style="font-family:Inter,sans-serif;font-size:11px;color:oklch(0.5 0.01 258);">18 août · Mise 10 J · Cote 1.95</div>
+                      </div>
+                      <div style="background:oklch(0.72 0.17 145 / 0.15);color:oklch(0.72 0.17 145);font-family:Inter,sans-serif;font-weight:700;font-size:11px;padding:4px 10px;border-radius:999px;white-space:nowrap;">+9,5 J</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="flex-shrink:0;display:flex;justify-content:space-around;padding:10px 12px 26px;border-top:1px solid oklch(0.28 0.02 258);background:oklch(0.15 0.02 258);">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:18px;height:18px;border-radius:5px;background:oklch(0.5 0.01 258);"></div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.5 0.01 258);">Paris</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="display:flex;align-items:flex-end;gap:2px;height:18px;">
+                    <div style="width:4px;height:8px;background:oklch(0.5 0.01 258);border-radius:1px;"></div>
+                    <div style="width:4px;height:14px;background:oklch(0.5 0.01 258);border-radius:1px;"></div>
+                    <div style="width:4px;height:11px;background:oklch(0.5 0.01 258);border-radius:1px;"></div>
+                  </div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.5 0.01 258);">Classement</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:18px;height:18px;border-radius:50%;border:2px solid oklch(0.78 0.15 85);"></div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.78 0.15 85);">Compte</div>
+                </div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+          <div style="background:oklch(0.2 0.01 258);color:oklch(0.97 0.005 258);font-family:Inter,sans-serif;font-weight:600;font-size:13px;padding:6px 16px;border-radius:999px;">5 · Classement</div>
+          <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="true" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:oklch(0.15 0.02 258);font-family:Inter,sans-serif;">
+              <div style="flex-shrink:0;padding:58px 20px 16px;">
+                <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:oklch(0.97 0.004 258);">Classement</div>
+                <div style="font-family:Inter,sans-serif;font-size:12px;color:oklch(0.68 0.01 258);margin-top:2px;">Gains cumulés en jetons</div>
+              </div>
+              <div style="flex:1;overflow:auto;overflow-x:hidden;scrollbar-width:none;padding:0 20px 24px;display:flex;flex-direction:column;gap:14px;justify-content:center;">
+                <div style="background:oklch(0.24 0.02 258);border:1.5px solid oklch(0.78 0.15 85);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:oklch(0.78 0.15 85);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:oklch(0.15 0.02 258);flex-shrink:0;">1</div>
+                  <div style="width:40px;height:40px;border-radius:50%;background:oklch(0.7 0.14 290);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);flex-shrink:0;">HU</div>
+                  <div style="flex:1;font-family:Inter,sans-serif;font-weight:600;font-size:15px;color:oklch(0.97 0.004 258);">Hugo</div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:oklch(0.72 0.17 145);">+42 J</div>
+                </div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:oklch(0.32 0.02 258);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:oklch(0.85 0.006 258);flex-shrink:0;">2</div>
+                  <div style="width:40px;height:40px;border-radius:50%;background:oklch(0.7 0.14 85);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);flex-shrink:0;">AN</div>
+                  <div style="flex:1;display:flex;flex-direction:column;">
+                    <div style="font-family:Inter,sans-serif;font-weight:600;font-size:15px;color:oklch(0.97 0.004 258);">Antoine</div>
+                    <div style="font-family:Inter,sans-serif;font-size:10px;color:oklch(0.78 0.15 85);">Toi</div>
+                  </div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:oklch(0.72 0.17 145);">+18 J</div>
+                </div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:oklch(0.32 0.02 258);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:oklch(0.85 0.006 258);flex-shrink:0;">3</div>
+                  <div style="width:40px;height:40px;border-radius:50%;background:oklch(0.7 0.14 35);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);flex-shrink:0;">AL</div>
+                  <div style="flex:1;font-family:Inter,sans-serif;font-weight:600;font-size:15px;color:oklch(0.97 0.004 258);">Alix</div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:oklch(0.66 0.19 25);">-5 J</div>
+                </div>
+                <div style="background:oklch(0.20 0.02 258);border:1px solid oklch(0.32 0.02 258);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:oklch(0.32 0.02 258);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:oklch(0.85 0.006 258);flex-shrink:0;">4</div>
+                  <div style="width:40px;height:40px;border-radius:50%;background:oklch(0.7 0.14 195);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:oklch(0.15 0.02 258);flex-shrink:0;">RE</div>
+                  <div style="flex:1;font-family:Inter,sans-serif;font-weight:600;font-size:15px;color:oklch(0.97 0.004 258);">Rémi</div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:oklch(0.66 0.19 25);">-12 J</div>
+                </div>
+              </div>
+              <div style="flex-shrink:0;display:flex;justify-content:space-around;padding:10px 12px 26px;border-top:1px solid oklch(0.28 0.02 258);background:oklch(0.15 0.02 258);">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:18px;height:18px;border-radius:5px;background:oklch(0.5 0.01 258);"></div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.5 0.01 258);">Paris</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="display:flex;align-items:flex-end;gap:2px;height:18px;">
+                    <div style="width:4px;height:8px;background:oklch(0.78 0.15 85);border-radius:1px;"></div>
+                    <div style="width:4px;height:14px;background:oklch(0.78 0.15 85);border-radius:1px;"></div>
+                    <div style="width:4px;height:11px;background:oklch(0.78 0.15 85);border-radius:1px;"></div>
+                  </div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.78 0.15 85);">Classement</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="width:18px;height:18px;border-radius:50%;border:2px solid oklch(0.5 0.01 258);"></div>
+                  <div style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;color:oklch(0.5 0.01 258);">Compte</div>
+                </div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

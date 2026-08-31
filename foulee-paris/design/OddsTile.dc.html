@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ selected }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:88px;height:100%;padding:10px 8px;border-radius:14px;background:oklch(0.78 0.15 85);border:1.5px solid oklch(0.78 0.15 85);box-sizing:border-box;">
+    <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.15 0.02 258);text-align:center;line-height:1.2;">{{ label }}</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:oklch(0.15 0.02 258);">{{ odds }}</div>
+  </div>
+</sc-if>
+<sc-if value="{{ notSelected }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:88px;height:100%;padding:10px 8px;border-radius:14px;background:oklch(0.24 0.02 258);border:1.5px solid oklch(0.32 0.02 258);box-sizing:border-box;">
+    <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:600;color:oklch(0.85 0.006 258);text-align:center;line-height:1.2;">{{ label }}</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:oklch(0.78 0.15 85);">{{ odds }}</div>
+  </div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:100,&quot;height&quot;:76},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Antoine&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;odds&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;1.85&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;selected&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const selected = !!this.props.selected;
+    return {
+      selected,
+      notSelected: !selected,
+      label: this.props.label ?? '',
+      odds: this.props.odds ?? '',
+    };
+  }
+}
+</script>
+</body>
+</html>

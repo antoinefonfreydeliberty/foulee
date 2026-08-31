@@ -5,6 +5,60 @@ Fichier de changelog évolutif de l'application **Foulée** (scope : foulée act
 
 ---
 
+## 2026-08-31 (suite 2) — Foulée Paris « Semi Ca$h » : moteur de cotes + mise & règlement + pages (blocs 3‑4)
+
+Scope : sous-dossier autonome `foulee-paris/` (hors app Foulée, hors `foulee_pro/`). Détail exhaustif et prompt de reprise : `foulee-paris/foulee-paris.md`. **Non commité, non déployé** (attente validation Antoine).
+
+- **Bloc 3 — moteur de cotes** (`lib/odds/`, fonctions **pures** + orchestration) : fetch `runner-stats` → temps de référence (meilleure sortie longue sur 3 sem. glissantes, élargi 4/6) → Riegel (exp. 1,06 → 21,1 km) → facteurs de forme (tendance d'allure 6 sem., assiduité 4 sem., douleurs) → écart-type (plancher 3 %) → **Monte Carlo 20 000 tirages** (PRNG graine, normale tronquée) → `cote = round(1/(p·1,07),2)`, plancher 1,05. Écriture `odds` en **ajout seul** + `runner_stats_snapshots`. Catalogue **idempotent** créé (15 marchés / 68 sélections) : vainqueur, classement complet (24), 6 face-à-face, 4 temps d'arrivée, 3 déterministes (progression/assiduité/moins de douleurs) ; marchés « battra son objectif » auto-créés dès qu'un objectif est saisi. Routes `POST /api/admin/recompute-odds` (bouton admin) et `GET|POST /api/cron/recompute-odds` (protégé `ODDS_CRON_SECRET`, ferme les marchés au 12/09 minuit Europe/Paris).
+- **Bloc 4 — mise & règlement + pages** : fonctions Postgres `place_wager` (mise **atomique**, verrou `FOR UPDATE`, cote figée côté serveur, solde jamais négatif) et `settle_market` (**idempotent**, `settlements.market_id` unique = anti double-crédit) + vue `current_odds`. Route `POST /api/wagers` (paris **simples**). Règlement admin `POST /api/admin/settle` (temps officiels + DNF → sélections gagnantes → paiements). Pages `/paris` (marchés + `OddsTile` + ticket de mise), `/mon-compte` (solde + historique), `/classement` (gains cumulés), formulaires admin Cotes + Règlement.
+- **Vérifié en live** : (a) proba→cote **à la main** sur vraies données Foulée (endpoint lancé en local — voir ci-dessous) conforme à la formule ; (b) écriture DB end-to-end + **idempotence** du recalcul ; (c) UI `/paris`→ticket→mise 10 J @1,09 → solde 100→90 J, `/mon-compte`, `/classement`, `/admin` rendus fidèles aux maquettes ; (d) **test RPC isolé** : mise > solde rejetée (solde intact), règlement crédite une seule fois, rejeu = no-op, **solde jamais négatif**. Objets de test supprimés, base propre. `tsc --noEmit` racine + `foulee-paris` OK.
+- **⚠ Point signalé :** l'endpoint `GET /api/betting/runner-stats` est **non commité / non déployé** côté Foulée → `www.foulee.run` renvoie 404. Vérification faite contre Foulée `next dev` local (secret injecté via l'env, jamais écrit ni logué). **Pour la prod : commiter + déployer cet endpoint côté Foulée (Vercel).**
+- **Garde-fous hors spec, à valider par Antoine :** `MAX_ODDS = 100` (plafond de cote), sensibilité pente d'allure `0,3`, cotes fixes déterministes (ladder `1,6/2,75/4,5/8`). Modèle actuel très tranché (Antoine ~87 % vainqueur) → beaucoup de cotes au plafond ; fidèle à la spec, ajustable.
+- **Secrets :** `BETTING_API_SECRET` + `ODDS_CRON_SECRET` posés dans `foulee-paris/.env.local` (gitignoré, jamais logués). **Reste : bloc 5 (Cloudflare, cron + déploiement)**, token Cloudflare à demander au moment M.
+
+### Fichiers créés / modifiés (bloc 3‑4)
+
+- `foulee-paris/lib/odds/` : `foulee.ts`, `engine.ts`, `catalog.ts`, `recompute.ts`, `settle.ts` (nouveaux)
+- `foulee-paris/lib/markets.ts`, `foulee-paris/lib/account.ts` (nouveaux)
+- `foulee-paris/components/OddsTile.tsx` (nouveau)
+- `foulee-paris/app/api/wagers/route.ts`, `.../api/admin/recompute-odds/route.ts`, `.../api/admin/settle/route.ts`, `.../api/cron/recompute-odds/route.ts` (nouveaux)
+- `foulee-paris/app/paris/{page.tsx,ParisClient.tsx}`, `.../mon-compte/page.tsx`, `.../classement/page.tsx` (paris réécrit, autres nouveaux)
+- `foulee-paris/app/admin/AdminClient.tsx` (sections Cotes + Règlement)
+- Base `foulee_paris` : migrations `place_wager_and_settle_market_functions`, `current_odds_view` ; catalogue de marchés seedé
+- `foulee-paris/foulee-paris.md`, `Foulée.md`, `MAJ_foulee.md` (docs)
+
+---
+
+## 2026-08-31 (suite) — Foulée Paris « Semi Ca$h » : base Supabase + auth PIN + panneau admin
+
+Scope : sous-dossier autonome `foulee-paris/` (hors app Foulée, hors `foulee_pro/`). Détail exhaustif et prompt de reprise : `foulee-paris/foulee-paris.md`.
+
+- **Base Supabase dédiée** `foulee_paris` (ref `vmfflhlizqtmrnyijrwa`, eu-west-3, même org que Foulée) : schéma complet (bettors, runners, runner_stats_snapshots, markets, selections, odds, wagers, transactions, settlements) + index + **RLS deny-all** (service-role only) + 4 runners seedés. Monnaie en centièmes de jeton (entiers), départ 100 J.
+- **Projet Next.js autonome** : design « Semi Ca$h » repris des maquettes (`foulee-paris/design/`), fonts Space Grotesk/Inter, accueil. **Isolation build** : `foulee-paris` exclu du `tsconfig.json` racine + `turbopack.root` épinglé → build racine de Foulée non impacté (`tsc --noEmit` racine OK, `foulee_pro/` intact).
+- **Auth PIN + admin** : login email + PIN (bcrypt), session JWT `jose` cookie httpOnly ; routes `/api/auth/login|logout`, `/api/admin/bettors` (création → PIN affiché 1× + crédit 100 J + transaction `grant_initial`), `/api/admin/runners` (objectifs). Pages `/login`, `/admin`. Admin Antoine amorcé via pgcrypto.
+- **Vérifié en live** (dev + vraie base) : mauvais PIN→401, login admin→200, création parieur→PIN 1×/100 J, login parieur→200, non-admin sur route admin→401 ; rendus fidèles aux maquettes. Parieur de test supprimé (base propre).
+- **Non commité, non déployé.** En attente : `BETTING_API_SECRET` côté `foulee-paris` (bloc 3) ; token Cloudflare (déploiement).
+
+---
+
+## 2026-08-31 — Endpoint paris `runner-stats` + démarrage plateforme Foulée Paris
+
+- **Origine :** nouveau chantier (instructions dédiées). Deux livrables dans le même dépôt ; `foulee_pro/` strictement hors périmètre.
+- **(1) Correction doc `Foulée.md` (section « Table profiles ») :** réalignée sur le schéma réel vérifié en base le 31/08 — colonnes réelles `runner_level`, `weekly_sessions`, `best_recent_time`, `goal_time`, `availability`, `injury_history`, `age`, `weight_kg` ; suppression des colonnes fictives `level`/`target_time`/`available_days`/`max_hr`/`resting_hr`.
+- **(2) Nouvel endpoint `GET /api/betting/runner-stats` (additif, aucun fichier existant modifié hors doc) :** auth `Bearer BETTING_API_SECRET` (fail-closed), `createAdminClient` lecture seule, `force-dynamic`. Par profil : champs bruts + `weekly_stats` par semaine de programme (distance, sorties, plus longue sortie, allure pondérée `sum(min)/sum(km)`, séances avec douleur, séances/sortie longue prévues) + `current_program_week` + `days_until_race`.
+- **Vérification (dev server local, secret éphémère injecté via l'env, jamais écrit dans un fichier) :** totaux cumulés === base, **tolérance zéro** (Alix 14 / 118,54 / 20,26 · Antoine 19 / 201,4 / 20 · Hugo 18 / 199 / 15,23 · Rémi 24 / 153,2 / 8,5) ; 401 sans header et avec mauvais secret ; 200 avec le bon.
+- **Point de donnée signalé :** `training_programs.sessions[].type` contient DEUX variantes de sortie longue en base (`sortie_longue` × 38, `sortie longue` × 13). Le matching couvre les deux — le spec littéral (`=== 'sortie_longue'`) aurait mis 13 semaines à `null`.
+- **Sécurité :** `BETTING_API_SECRET` à poser par Antoine (`.env.local` + Vercel), jamais généré/affiché/committé. **Token Cloudflare transmis en clair dans le brief → à révoquer** (non utilisé, non écrit).
+- **Phase 2 (`foulee-paris/`) :** non démarrée — en attente base Supabase dédiée + secret + token Cloudflare. Maquettes Claude Design déjà présentes dans `foulee-paris/design/`.
+
+### Fichiers créés / modifiés
+
+- `app/api/betting/runner-stats/route.ts` (nouveau)
+- `Foulée.md` (section profiles corrigée ; nouvelles sections « Intégrations externes » et « Plateforme Foulée Paris » ; ligne décision 31/08)
+- `MAJ_foulee.md` (cette entrée)
+
+---
+
 ## 2026-08-10 (suite) — Rapports : suppression des onglets, chiffres live, barres cliquables
 
 - **Origine :** retour d'Antoine. Remplace la demande précédente (`instructions_claude_code_bugs_rapports.md`) qui voulait réparer les onglets Sem./Mois/Saison : décision changée, ces boutons sont **supprimés**, pas réparés. Le bug des chiffres figés (jamais corrigé lors de la 1re tentative) est traité ici.
