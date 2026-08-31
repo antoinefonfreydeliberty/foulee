@@ -76,11 +76,28 @@ export function AdminClient({
         gap: 22,
       }}
     >
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22 }}>
           Admin · Semi Ca$h
         </div>
-        <LogoutButton />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <a
+            href="/paris"
+            style={{
+              background: 'var(--gold)',
+              color: 'var(--bg)',
+              fontWeight: 700,
+              fontSize: 13,
+              padding: '9px 14px',
+              borderRadius: 10,
+              fontFamily: 'var(--font-body)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Voir les paris →
+          </a>
+          <LogoutButton />
+        </div>
       </header>
 
       <CreateBettor
