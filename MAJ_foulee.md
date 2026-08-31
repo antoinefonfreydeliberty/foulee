@@ -5,6 +5,18 @@ Fichier de changelog évolutif de l'application **Foulée** (scope : foulée act
 
 ---
 
+## 2026-09-01 — Foulée Paris « Semi Ca$h » : déploiement Cloudflare Workers (bloc 5) — EN LIGNE
+
+Scope : `foulee-paris/`. Suite des blocs 3‑4. Détail : `foulee-paris/foulee-paris.md`.
+
+- **Déployé** sur **https://semi-cash.fonfreyde-antoine.workers.dev** via **`@opennextjs/cloudflare`** (adaptateur mûr, runtime Node.js ; `vinext` écarté car expérimental). A nécessité de bumper **Next 16.2.7 → 16.3.4** côté `foulee-paris` uniquement (exigence de l'adaptateur ; root Foulée intact, `tsc --noEmit` racine OK).
+- **Config** : `open-next.config.ts`, `wrangler.jsonc` (vars publiques + cron `0 */6 * * *`), `cron-worker.ts` (entrée custom : `fetch` délégué à OpenNext + `scheduled` ré-invoquant `/api/cron/recompute-odds`). Secrets (`SUPABASE_SERVICE_ROLE_KEY`, `BETTING_API_SECRET`, `SESSION_SECRET`, `ODDS_CRON_SECRET`) posés via `wrangler secret put` — jamais commités, jamais dans `wrangler.jsonc`. Token Cloudflare fourni par Antoine, utilisé en env le temps du déploiement, jamais commité/logué.
+- **Vérifié en live** : `/`→200, login admin→`{ok:true,isAdmin:true}`, `/paris` authentifié→200 + marchés rendus, cron sans auth→401 (fail-closed), `wrangler secret list`=4 secrets. Cron `0 */6 * * *` enregistré.
+- **⚠ Prérequis prod du cron :** l'endpoint `runner-stats` côté Foulée est commité (`e14b875`) mais **pas encore déployé sur Vercel** → le recalcul en ligne renverra 404 tant que Foulée n'est pas redéployé. L'appli fonctionne déjà (cotes en base). Secrets à roter (transités en clair).
+- **Commits :** `e14b875` (blocs 1‑4 + endpoint Foulée + docs), `7dad5af` (config déploiement Cloudflare). `foulee_pro/` strictement intact, `.env.local`/token jamais commités.
+
+---
+
 ## 2026-08-31 (suite 2) — Foulée Paris « Semi Ca$h » : moteur de cotes + mise & règlement + pages (blocs 3‑4)
 
 Scope : sous-dossier autonome `foulee-paris/` (hors app Foulée, hors `foulee_pro/`). Détail exhaustif et prompt de reprise : `foulee-paris/foulee-paris.md`. **Non commité, non déployé** (attente validation Antoine).

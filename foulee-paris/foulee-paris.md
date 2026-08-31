@@ -36,9 +36,10 @@ d'entraînement réelles exposées par l'app **Foulée** (projet principal du d�
 
 ## Statut actuel
 
-**Niveau :** en construction. Blocs 1‑4 **faits et vérifiés en live** (base + schéma + auth PIN
-+ panneau admin + **moteur de cotes** + **pages paris/compte/classement** + **mise & règlement**).
-Reste : **déploiement Cloudflare** (bloc 5). Non commité, non déployé (attente validation Antoine).
+**Niveau :** **EN LIGNE.** Blocs 1‑5 faits et vérifiés en live. Base + schéma + auth PIN + panneau
+admin + moteur de cotes + pages paris/compte/classement + mise & règlement + **déploiement Cloudflare
+Workers**. Commité (`e14b875` blocs 1‑4, `7dad5af` déploiement). **URL : https://semi-cash.fonfreyde-antoine.workers.dev**
+Reste : (a) déployer l'endpoint `runner-stats` côté Foulée en prod (sinon le cron 404) ; (b) roter les secrets.
 
 > **⚠ À signaler (31/08/26) :** l'endpoint Foulée `GET /api/betting/runner-stats` **n'est pas
 > déployé en prod** (`www.foulee.run` → 404) : le fichier `app/api/betting/runner-stats/route.ts`
@@ -156,13 +157,34 @@ Reste : **déploiement Cloudflare** (bloc 5). Non commité, non déployé (atten
   intact), règlement crédite une fois (→13000), rejeu = no-op, **solde jamais négatif**. Objets de test
   supprimés, base rendue propre (Antoine 100 J, 0 pari).
 
+### Fait — Bloc 5 : déploiement Cloudflare Workers (01/09/26)
+
+- **Méthode : `@opennextjs/cloudflare`** (adaptateur mûr, runtime Node.js — vs `vinext`, la nouvelle
+  reco Cloudflare mais expérimentale). A nécessité de **bumper Next 16.2.7 → 16.3.4** côté
+  `foulee-paris` uniquement (l'adaptateur exige `>=16.3.3` ; root Foulée intact, `tsc` racine OK).
+- **Config** : `open-next.config.ts` (bare), `wrangler.jsonc` (`vars` publiques uniquement + cron
+  `0 */6 * * *`), **`cron-worker.ts`** = entrée custom qui délègue le `fetch` à OpenNext et ajoute
+  un `scheduled` ré-invoquant `/api/cron/recompute-odds` (contexte Next.js + env réutilisés). Worker
+  d'entrée exclu du `tsconfig` (globals Workers).
+- **Secrets** posés via `wrangler secret put` (jamais commités, jamais dans `wrangler.jsonc`) :
+  `SUPABASE_SERVICE_ROLE_KEY`, `BETTING_API_SECRET`, `SESSION_SECRET`, `ODDS_CRON_SECRET`.
+- **Déployé** sur **https://semi-cash.fonfreyde-antoine.workers.dev** (compte
+  `fonfreyde.antoine@gmail.com`, ID `014482fd…`), cron `0 */6 * * *` enregistré. Token Cloudflare
+  fourni par Antoine, utilisé en variable d'env le temps du déploiement, jamais commité/logué.
+- **Vérifié en live** : `/` → 200 ; login admin → `{ok:true,isAdmin:true}` (secrets OK) ; `/paris`
+  authentifié → 200 + marchés/cotes rendus (lecture DB via service role OK) ; `/api/cron/recompute-odds`
+  sans auth → **401** (fail-closed). `wrangler secret list` = 4 secrets (valeurs masquées).
+- **Redéployer** après changement de code : `npm --prefix foulee-paris run … ` → `npx opennextjs-cloudflare deploy`
+  (avec `CLOUDFLARE_API_TOKEN` en env). Les secrets/vars persistent entre déploiements.
+
 ### Reste à faire
 
-- [ ] **Bloc 5 — Cloudflare** : cron (recalcul cotes toutes les 6 h + fermeture au 12/09 minuit
-      Europe/Paris) + déploiement (méthode Next.js-sur-Cloudflare à revérifier au moment M —
-      probablement `@opennextjs/cloudflare`). Token API Cloudflare à demander à Antoine à ce moment.
-- [ ] **Prérequis prod :** commiter + déployer l'endpoint `runner-stats` côté Foulée (Vercel) —
-      actuellement non déployé (404 en prod).
+- [ ] **Prérequis prod du cron :** commiter (fait, `e14b875`) **+ déployer sur Vercel** l'endpoint
+      `runner-stats` côté Foulée — sinon le cron/recalcul renvoie 404 (`www.foulee.run` pas encore à jour).
+      L'appli fonctionne déjà (cotes en base) ; seul le recalcul en ligne attend ce déploiement.
+- [ ] **Roter les secrets** transités en clair dans le chat (`SUPABASE_SERVICE_ROLE_KEY`,
+      `BETTING_API_SECRET`, token Cloudflare) quand pratique.
+- [ ] Saisir les `goal_time_seconds` des coureurs (admin) pour activer les marchés « battra son objectif ».
 - [ ] Vérifications finales (voir section « Vérification avant présentation »).
 
 ### En attente d'Antoine
