@@ -31,9 +31,22 @@ const ADHERENCE_THRESHOLD = 0.7 // sous 70 % → pénalité
 const ADHERENCE_MAX_PENALTY = 1.03
 const PAIN_THRESHOLD = 2 // strictement > 2 douleurs sur 4 sem.
 const PAIN_PENALTY = 1.02
-const SD_BASE = 0.04
+const SD_BASE = 0.04 // bruit "jour de course" (variabilité d'un même coureur)
 const SD_DISTANCE_TERM = 0.01
 const SD_FLOOR_FRACTION = 0.03 // sd jamais sous 3 % du temps projeté
+// Incertitude d'ESTIMATION du niveau ("modèle") : le temps semi est inféré d'une
+// poignée de sorties longues extrapolées via Riegel — très incertain (on ne connaît
+// pas le vrai niveau au ruban près). Combinée en quadrature avec le bruit jour-de-
+// course, elle évite un modèle surconfiant qui envoie les outsiders à la cote plafond
+// (proba ≈ 0). Socle plat, réglable : ↑ = course plus ouverte, ↓ = plus tranchée.
+export const MODEL_UNCERTAINTY = 0.06
+// L'incertitude d'estimation CROÎT avec la distance d'extrapolation : projeter un
+// semi depuis une sortie courte (ex. 8,5 km) est bien plus hasardeux que depuis
+// 20 km. On mesure l'excès d'extrapolation par (21,1 / dist_réf − 1) et on l'ajoute
+// au socle modèle. Sans ça, un coureur mal renseigné (peu de longues) affichait une
+// projection quasi aussi "sûre" qu'un coureur bien renseigné — donc des cotes
+// d'outsider surévaluées. Réglable (↑ = SD des mal-renseignés plus large).
+export const EXTRAPOLATION_SENSITIVITY = 0.06
 
 // ---------------------------------------------------------------------------
 // PRNG déterministe (mulberry32) + normale tronquée positive (Box–Muller)
@@ -181,7 +194,13 @@ export function computeFormFactors(weekly: FouleeWeeklyStat[]): FormFactors {
 
 /** Écart-type de simulation (secondes), avec plancher à 3 % du temps projeté. */
 export function computeSd(projectedTimeSeconds: number, refDistanceKm: number): number {
-  const factor = SD_BASE + SD_DISTANCE_TERM * Math.max(0, (HALF_MARATHON_KM - refDistanceKm) / 5)
+  // Bruit jour-de-course (terme distance léger de la spec).
+  const raceFrac = SD_BASE + SD_DISTANCE_TERM * Math.max(0, (HALF_MARATHON_KM - refDistanceKm) / 5)
+  // Incertitude d'estimation = socle plat + terme croissant avec l'extrapolation.
+  const extrapolationExcess = Math.max(0, HALF_MARATHON_KM / refDistanceKm - 1)
+  const modelFrac = MODEL_UNCERTAINTY + EXTRAPOLATION_SENSITIVITY * extrapolationExcess
+  // Total prédictif = bruit course ⊕ incertitude d'estimation (variances additives).
+  const factor = Math.sqrt(raceFrac * raceFrac + modelFrac * modelFrac)
   const sd = projectedTimeSeconds * factor
   return Math.max(sd, projectedTimeSeconds * SD_FLOOR_FRACTION)
 }
@@ -358,6 +377,22 @@ export function runMonteCarlo(models: RunnerModel[], opts: MonteCarloOptions = {
     goalProb,
     meanTimeSeconds,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Lissage des probabilités d'un marché (shrinkage vers l'équiprobable)
+// ---------------------------------------------------------------------------
+// p' = (1-λ)·p + λ/K, sur les K issues mutuellement exclusives d'un marché.
+// Rôle : garantir qu'aucune issue ne tombe à 0 % exact (donc plus de "mur" de
+// cotes au plafond MAX_ODDS pour les outsiders), et faire varier les cotes au lieu
+// d'un palier plat. Lissage de Laplace, réglable (λ=0 → aucun lissage).
+export const SHRINKAGE_LAMBDA = 0.05
+
+/** Lisse un vecteur de probabilités (issues mutuellement exclusives) vers 1/K. */
+export function shrinkProbs(probs: number[], lambda: number = SHRINKAGE_LAMBDA): number[] {
+  const k = probs.length
+  if (k === 0) return probs
+  return probs.map((p) => (1 - lambda) * p + lambda / k)
 }
 
 // ---------------------------------------------------------------------------

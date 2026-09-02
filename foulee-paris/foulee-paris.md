@@ -39,6 +39,9 @@ d'entraînement réelles exposées par l'app **Foulée** (projet principal du d�
 **Niveau :** **EN LIGNE.** Blocs 1‑5 faits et vérifiés en live. Base + schéma + auth PIN + panneau
 admin + moteur de cotes + pages paris/compte/classement + mise & règlement + **déploiement Cloudflare
 Workers**. Commité (`e14b875` blocs 1‑4, `7dad5af` déploiement). **URL : https://semi-cash.fonfreyde-antoine.workers.dev**
+**Évolution 02/09 : cotes plus réalistes** (incertitude modèle + extrapolation + lissage) — recalcul
+live joué, nouvelles cotes en base, plafond 100 : 36→15. **Redéploiement Cloudflare à faire** pour
+embarquer le nouveau moteur (le token n'était plus dispo en session au moment du commit).
 Reste : (a) déployer l'endpoint `runner-stats` côté Foulée en prod (sinon le cron 404) ; (b) roter les secrets.
 
 > **⚠ À signaler (31/08/26) :** l'endpoint Foulée `GET /api/betting/runner-stats` **n'est pas
@@ -177,8 +180,53 @@ Reste : (a) déployer l'endpoint `runner-stats` côté Foulée en prod (sinon le
 - **Redéployer** après changement de code : `npm --prefix foulee-paris run … ` → `npx opennextjs-cloudflare deploy`
   (avec `CLOUDFLARE_API_TOKEN` en env). Les secrets/vars persistent entre déploiements.
 
+### Fait — Évolution : cotes plus réalistes (02/09/26)
+
+- **Problème signalé par Antoine :** beaucoup de cotes au plafond (Hugo/Rémi vainqueur à 100).
+  **Cause :** modèle **surconfiant** — le `sd` de simulation (~4-5 %) ne modélisait que le bruit
+  *jour-de-course*, en ignorant l'**incertitude d'estimation** (le temps semi est inféré d'une
+  poignée de sorties longues extrapolées via Riegel). Les écarts entre coureurs ≫ `sd` → outsiders
+  à proba ≈ 0 → cote plafonnée.
+- **Correctif (3 leviers, `engine.ts` + `catalog.ts`) :**
+  1. **Incertitude modèle** `MODEL_UNCERTAINTY = 0.06`, socle plat combiné en quadrature dans
+     `computeSd` (`sd = projeté × √(frac_course² + frac_modèle²)`).
+  2. **Terme d'extrapolation** `EXTRAPOLATION_SENSITIVITY = 0.06` : l'incertitude modèle CROÎT avec
+     la distance d'extrapolation Riegel — `frac_modèle = 0.06 + 0.06 × max(0, 21.1/dist_réf − 1)`.
+     Un coureur projeté depuis une sortie courte (Rémi, réf 8,5 km) est bien plus incertain qu'un
+     coureur bien renseigné (Antoine, réf 20 km) → SD réelles : Antoine 7,6 % · Hugo 9,8 % ·
+     Alix 12,7 % · Rémi 16,3 % (au lieu de ~7-9 % pour tous). Corrige la surévaluation des cotes
+     d'outsider mal renseignés.
+  3. **Lissage** `SHRINKAGE_LAMBDA = 0.05` (`shrinkProbs`, Laplace `p'=(1-λ)p+λ/K`) appliqué **par
+     marché Monte Carlo** (vainqueur, classement, face-à-face, temps, objectif) avant conversion →
+     plus de « mur » plat à `MAX_ODDS`, cotes d'outsiders variées.
+- **Non touché :** `probToOdds` (formule + `MAX_ODDS=100` conservés comme garde-fou absolu),
+  marchés déterministes (ladder fixe). Choix « Modéré » + terme d'extrapolation validés par Antoine.
+  Les 3 constantes sont réglables (↑ = course plus ouverte).
+- **Effet — RECALCUL LIVE joué sur vraies données Foulée** (Foulée `next dev` local :3000 → Semi
+  Ca$h :3001 → route cron ; 68 cotes + 4 snapshots écrits, 0 warning). Marché vainqueur :
+
+  | Coureur | Avant | Modéré (2 lev.) | + extrapolation |
+  | --- | --- | --- | --- |
+  | Antoine | 1.09 | 1.27 | 1.41 |
+  | Alix | 6.65 | 3.94 | 3.18 |
+  | Hugo | 100 | 54.93 | 37.04 |
+  | Rémi | 100 | 74.48 | 45.63 |
+
+  Sélections à la cote plafond 100 : **36 → 15** (les 15 restantes = permutations du « Classement
+  complet », des ordres réellement quasi impossibles — plafond réaliste, laissé tel quel).
+- **Base :** les cotes courantes en base `vmfflhlizqtmrnyijrwa` sont désormais celles du nouveau
+  moteur (odds en ajout seul : l'historique est conservé). En prod, le prochain cron / le bouton
+  admin recalcule pareil une fois l'endpoint Foulée déployé.
+- **Vérif :** `npx tsc --noEmit -p foulee-paris/tsconfig.json` **+** `npx tsc --noEmit` racine → OK.
+
 ### Reste à faire
 
+- [x] **Rejouer un recalcul** (fait le 02/09, route cron sur Foulée local) : nouvelles cotes en base,
+      vérifiées à la main (vainqueur, face-à-face, temps). Plafond 100 : 36→15.
+- [ ] **Redéployer Cloudflare** pour embarquer le nouveau moteur de cotes (`engine.ts`/`catalog.ts`) :
+      `npx opennextjs-cloudflare deploy` avec `CLOUDFLARE_API_TOKEN` en env (token à refournir par
+      Antoine, ou `wrangler login`). Sans ça, la prod tourne encore l'ancien moteur — sans impact
+      immédiat tant que l'endpoint Foulée est 404 (aucun recalcul prod), mais à faire avant qu'il le soit.
 - [ ] **Prérequis prod du cron :** commiter (fait, `e14b875`) **+ déployer sur Vercel** l'endpoint
       `runner-stats` côté Foulée — sinon le cron/recalcul renvoie 404 (`www.foulee.run` pas encore à jour).
       L'appli fonctionne déjà (cotes en base) ; seul le recalcul en ligne attend ce déploiement.
@@ -569,6 +617,7 @@ Thème **sombre unique**, style bookmaker. Distinct de Foulée (ne pas réutilis
 | 31/08/26 | `MAX_ODDS = 100` (plafond de cote, hors spec) | Évite des cotes à 5 chiffres sur les issues quasi impossibles (permutations de classement) ; à valider par Antoine |
 | 31/08/26 | Cotes fixes déterministes par rang (ladder `1,6/2,75/4,5/8`) | Spec : « cote fixe simple selon le classement » — pas de Monte Carlo pour progression/assiduité/douleurs |
 | 31/08/26 | Cote **figée côté serveur** à la mise (dernière ligne `odds`), pas celle du client | Empêche de miser à une cote périmée/falsifiée ; `odds_at_placement` fait foi |
+| 02/09/26 | `MODEL_UNCERTAINTY = 0.06` + `EXTRAPOLATION_SENSITIVITY = 0.06` (quadrature dans `sd`) + `SHRINKAGE_LAMBDA = 0.05` (lissage par marché) | Cotes réalistes : le modèle ignorait l'incertitude d'estimation (Riegel sur peu de données) → outsiders à 100. L'incertitude croît maintenant avec la distance d'extrapolation (coureur mal renseigné = SD plus large). Sans casser la formule ni `MAX_ODDS`. Réglable. Validé par Antoine ; plafond 100 : 36→15 en live |
 
 ---
 

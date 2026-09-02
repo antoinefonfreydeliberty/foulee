@@ -10,6 +10,7 @@ import {
   computeFormFactors,
   probToOdds,
   runMonteCarlo,
+  shrinkProbs,
   type RunnerModel,
   type SimulationResult,
   type TimeBracket,
@@ -280,41 +281,40 @@ export function computeCatalogOdds(
   for (const market of catalog) {
     const sel = new Map<string, number>()
 
+    // Marchés Monte Carlo : on lisse le vecteur de probabilités du marché (issues
+    // mutuellement exclusives) AVANT conversion en cote — pas de mur plat à MAX_ODDS.
     if (market.type === 'winner' && simulation) {
-      for (const s of market.selections) {
-        const n = s.runner_first_name as string
-        if (modeledSet.has(n)) sel.set(s.sel_key, probToOdds(simulation.winProb[n] ?? 0))
-      }
+      const modeled = market.selections.filter((s) => modeledSet.has(s.runner_first_name as string))
+      const probs = shrinkProbs(modeled.map((s) => simulation.winProb[s.runner_first_name as string] ?? 0))
+      modeled.forEach((s, i) => sel.set(s.sel_key, probToOdds(probs[i])))
     } else if (market.type === 'podium_full' && simulation && skipped.length === 0) {
-      for (const s of market.selections) {
-        const order = (s.meta.order as string[]).join('>')
-        sel.set(s.sel_key, probToOdds(simulation.orderProb[order] ?? 0))
-      }
+      const probs = shrinkProbs(
+        market.selections.map((s) => simulation.orderProb[(s.meta.order as string[]).join('>')] ?? 0)
+      )
+      market.selections.forEach((s, i) => sel.set(s.sel_key, probToOdds(probs[i])))
     } else if (market.type === 'head_to_head' && simulation) {
       const [a, b] = market.selections.map((s) => s.runner_first_name as string)
       if (modeledSet.has(a) && modeledSet.has(b)) {
         const [lo, hi] = a < b ? [a, b] : [b, a]
         const pLoFaster = simulation.h2hProb[`${lo}|${hi}`] ?? 0
-        for (const s of market.selections) {
-          const n = s.runner_first_name as string
-          const p = n === lo ? pLoFaster : 1 - pLoFaster
-          sel.set(s.sel_key, probToOdds(p))
-        }
+        const rawByName: Record<string, number> = { [lo]: pLoFaster, [hi]: 1 - pLoFaster }
+        const probs = shrinkProbs(market.selections.map((s) => rawByName[s.runner_first_name as string]))
+        market.selections.forEach((s, i) => sel.set(s.sel_key, probToOdds(probs[i])))
       }
     } else if (market.type === 'time_bracket' && simulation) {
       const n = market.selections[0]?.runner_first_name as string
       if (modeledSet.has(n)) {
-        const probs = simulation.bracketProb[n] ?? []
-        market.selections.forEach((s, i) => sel.set(s.sel_key, probToOdds(probs[i] ?? 0)))
+        const raw = simulation.bracketProb[n] ?? []
+        const probs = shrinkProbs(market.selections.map((_, i) => raw[i] ?? 0))
+        market.selections.forEach((s, i) => sel.set(s.sel_key, probToOdds(probs[i])))
       }
     } else if (market.type === 'prop' && market.key.startsWith('objectif_') && simulation) {
       const n = market.selections[0]?.runner_first_name as string
       if (modeledSet.has(n)) {
         const pYes = simulation.goalProb[n] ?? 0
-        for (const s of market.selections) {
-          const side = (s.meta.side as string) === 'yes' ? pYes : 1 - pYes
-          sel.set(s.sel_key, probToOdds(side))
-        }
+        const rawBySide: Record<string, number> = { yes: pYes, no: 1 - pYes }
+        const probs = shrinkProbs(market.selections.map((s) => rawBySide[s.meta.side as string]))
+        market.selections.forEach((s, i) => sel.set(s.sel_key, probToOdds(probs[i])))
       }
     } else if (market.type === 'prop') {
       // Marché déterministe : cote fixe selon le classement (pas de Monte Carlo).
