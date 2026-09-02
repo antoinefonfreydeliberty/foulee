@@ -40,8 +40,8 @@ d'entraînement réelles exposées par l'app **Foulée** (projet principal du d�
 admin + moteur de cotes + pages paris/compte/classement + mise & règlement + **déploiement Cloudflare
 Workers**. Commité (`e14b875` blocs 1‑4, `7dad5af` déploiement). **URL : https://semi-cash.fonfreyde-antoine.workers.dev**
 **Évolution 02/09 : cotes plus réalistes** (incertitude modèle + extrapolation + lissage) — recalcul
-live joué, nouvelles cotes en base, plafond 100 : 36→15. **Redéploiement Cloudflare à faire** pour
-embarquer le nouveau moteur (le token n'était plus dispo en session au moment du commit).
+live joué, nouvelles cotes en base, plafond 100 : 36→15. Commité `a3bcb3b`. **Redéployé sur Cloudflare
+le 02/09** (version `96eee380`, cron `0 */6 * * *` conservé) : `/`→200, cron sans auth→401 vérifiés.
 Reste : (a) déployer l'endpoint `runner-stats` côté Foulée en prod (sinon le cron 404) ; (b) roter les secrets.
 
 > **⚠ À signaler (31/08/26) :** l'endpoint Foulée `GET /api/betting/runner-stats` **n'est pas
@@ -223,10 +223,9 @@ Reste : (a) déployer l'endpoint `runner-stats` côté Foulée en prod (sinon le
 
 - [x] **Rejouer un recalcul** (fait le 02/09, route cron sur Foulée local) : nouvelles cotes en base,
       vérifiées à la main (vainqueur, face-à-face, temps). Plafond 100 : 36→15.
-- [ ] **Redéployer Cloudflare** pour embarquer le nouveau moteur de cotes (`engine.ts`/`catalog.ts`) :
-      `npx opennextjs-cloudflare deploy` avec `CLOUDFLARE_API_TOKEN` en env (token à refournir par
-      Antoine, ou `wrangler login`). Sans ça, la prod tourne encore l'ancien moteur — sans impact
-      immédiat tant que l'endpoint Foulée est 404 (aucun recalcul prod), mais à faire avant qu'il le soit.
+- [x] **Redéployer Cloudflare** pour embarquer le nouveau moteur de cotes — fait le 02/09
+      (`npx opennextjs-cloudflare deploy`, version `96eee380`). Smoke tests OK (`/`→200, `/paris`→307,
+      cron sans auth→401). Le token Cloudflare utilisé le 02/09 a transité en clair dans le chat → **à roter**.
 - [ ] **Prérequis prod du cron :** commiter (fait, `e14b875`) **+ déployer sur Vercel** l'endpoint
       `runner-stats` côté Foulée — sinon le cron/recalcul renvoie 404 (`www.foulee.run` pas encore à jour).
       L'appli fonctionne déjà (cotes en base) ; seul le recalcul en ligne attend ce déploiement.
