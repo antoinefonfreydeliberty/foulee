@@ -19,6 +19,7 @@ export interface Profile {
   injury_history: string | null
   goal_time: string | null
   onboarding_completed: boolean
+  race_day_email_sent_at?: string | null   // idempotence email J-1 (course), NULL = pas encore envoye ; optionnel pour ne pas casser les inserts onboarding (root type-check aussi foulee_pro)
   created_at: string
 }
 

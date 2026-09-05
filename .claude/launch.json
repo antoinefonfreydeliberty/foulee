@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "foulee",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
       "name": "foulee-paris",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "foulee-paris", "run", "dev", "--", "-p", "3001"],

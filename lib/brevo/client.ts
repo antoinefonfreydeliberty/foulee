@@ -21,3 +21,26 @@ export const sendWeeklyEmail = async ({ to, toName, coachName, htmlContent, week
     htmlContent,
   })
 }
+
+interface RaceDayEmailParams {
+  to: string
+  toName: string
+  coachName: string
+  htmlContent: string
+}
+
+// Email J-1 (veille de course), envoi one-shot. Même sender que l'email
+// hebdomadaire, sujet dédié orienté "veille de course".
+export const sendRaceDayEmail = async ({ to, toName, coachName, htmlContent }: RaceDayEmailParams) => {
+  const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY! })
+
+  return client.transactionalEmails.sendTransacEmail({
+    sender: {
+      email: process.env.BREVO_SENDER_EMAIL ?? 'coach@foulee.run',
+      name: `${coachName} via Foulée`,
+    },
+    to: [{ email: to, name: toName }],
+    subject: `Demain, c'est le grand jour, ${toName} 🏁`,
+    htmlContent,
+  })
+}
