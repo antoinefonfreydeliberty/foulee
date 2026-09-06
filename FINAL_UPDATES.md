@@ -77,14 +77,20 @@ Derniere mise a jour : 2026-09-05 (creation du fichier de suivi)
 - DEPLOIEMENT : auto-deploy Vercel depuis `main` -> `dpl_9NDw1C5xMBXZmHGU5PHTXNHudzMs` (commit d040371) READY en production (projet Vercel `foulee`, id `prj_0Z1XG9TUEdWOirQIlnIRDLv02oZP`, team `team_i00GMeEXbz07XNGghIRhk9BI`), alias www.foulee.run / foulee.run a jour.
 
 ## Chantier 3 - Email de cloture (dimanche 13, cron habituel)
-- [ ] `isFinalWeek` + `TOTAL_PROGRAM_WEEKS` integres dans la route cron existante
-- [ ] Garde-fou anti-envoi post-programme (semaine > 14 = no-op complet) teste
-- [ ] `buildWeeklyReportPrompt` adapte (bilan global 14 semaines, resultat du jour J mis en avant, pas de programme semaine suivante)
-- [ ] `buildEmailHtml` adapte (bloc hero resultat du jour, variante cloture, variante "bilan course pas encore logge")
-- [ ] Podium de cloture base sur le temps de course (pas le volume de la semaine), coureurs sans resultat geres proprement
-- [ ] Classement km des semaines 1-13 verifie inchange (non-regression)
-- [ ] Test sur un jeu de donnees simulant la semaine 14 (avec/sans resultat logge) et un run simule semaine 15+ (garde-fou)
-- [ ] Valide par Antoine
+- [x] `isFinalWeek` + `TOTAL_PROGRAM_WEEKS` integres dans la route cron existante. `TOTAL_PROGRAM_WEEKS = 14`. Nouveau helper `getRawProgramWeek()` dans dates.ts (semaine NON clampee, additif ; getProgramWeek reste borne a 14). `isFinalWeek = rawWeek === 14`.
+- [x] Garde-fou anti-envoi post-programme teste. Juste apres l'auth : `if (rawWeek > 14) return no-op` AVANT toute creation de client DB -> zero ecriture, zero envoi. Verifie via la VRAIE route (PROGRAM_START_DATE avance a 2026-05-25 -> rawWeek 15) : HTTP 200 `{processed:0, skipped:0, note:"post-program: no-op"}`. Le cron hebdo tourne chaque dimanche (0 19 * * 0) : 13/09 rawWeek=14 -> cloture ; 20/09 rawWeek=15 -> no-op.
+- [x] Prompt de cloture DEDIE `lib/claude/closing-prompt.ts` (`buildClosingReportPrompt`, types `ClosingStats`/`RaceResult`/`ClosingPodiumEntry`/`ClosingContent`). Choix : fichier dedie plutot que d'alourdir `buildWeeklyReportPrompt` (semaines 1-13), meme convention que le Chantier 1 (race-day-prompt). Bilan global 14 semaines (stats pre-calculees), resultat du jour J mis en avant, AUCUN programme semaine suivante. coach_tips orientes apres-course (recuperation/celebration/suite).
+- [x] Email de cloture DEDIE `lib/brevo/closing-email.ts` (`buildClosingEmailHtml`), design Studio.Jour, sans toucher email-builder.ts. Hero resultat du jour (temps + distance + allure + ressenti) OU variante "course pas encore loggee" (encart + CTA "Enregistrer ma course"). Bilan global (km total, plus longue sortie, semaines actives /14, allure moyenne). Aucune section "programme semaine suivante". Sujet dedie `sendClosingEmail` ("Ton bilan des 14 semaines, {prenom}").
+- [x] Podium de cloture base sur le TEMPS de course (duration_minutes croissant), calcule une fois par run (comme le classement km). Coureurs sans resultat listes en fin, sans medaille, mention neutre "resultat a venir" (jamais culpabilisant). Si plusieurs sorties le jour J, on retient la plus longue (= la course).
+- [x] Non-regression semaines 1-13 : le calcul du classement km et tout le chemin hebdomadaire sont INCHANGES (les 2 ajouts sont gardes par `isFinalWeek`/`rawWeek>14`, jamais actifs en semaines 1-13). `npx tsc --noEmit` = exit 0.
+- [x] Testes via harnais temporaire `scripts/_tmp-closing-dryrun.mts` (SUPPRIME apres coup ; aucun envoi, aucune ecriture DB ; rejoue la logique de la route avec les VRAIES stats d'entrainement + resultats de course SYNTHETIQUES). Jeu de test : Antoine/Hugo/Remi = variante resultat (podium Hugo 1h48, Antoine 1h52, Remi 2h05), Alix = variante "pas loggee" (en bas du podium). Verifie : 0 tiret cadratin dans les 4 HTML, aucune mention "semaine suivante" dans coach_analysis, 3 tips chacun, stats globales exactes (Antoine 215,4/21/12sem, Hugo 223,2/20, Remi 153,2/24, Alix 126,0/15). Allure moyenne globale = vraie donnee (Hugo 7'15", Remi 7'17" : verifie en base, pas d'aberration, ce sont leurs allures d'entrainement reelles). 4 HTML envoyes a Antoine pour revue.
+- [x] Valide par Antoine le 06/09 (emails valides).
+
+### Notes Chantier 3 (06/09)
+- Perimetre : `lib/utils/dates.ts` (helper additif), `lib/claude/closing-prompt.ts` (new), `lib/brevo/closing-email.ts` (new), `lib/brevo/client.ts` (sendClosingEmail ajoute), `app/api/cron/weekly-report/route.ts` (garde-fou + branche isFinalWeek + podium). Aucun `foulee-paris/` ni `foulee_pro/`.
+- NON teste en reel sur la vraie route en mode semaine finale : ce chemin fait un upsert weekly_reports (pollution prod + risque idempotence pour le vrai 13/09) -> valide uniquement par le harnais sans ecriture. Seul le garde-fou (retour anticipe) a ete lance en reel.
+- `stats` stockee dans weekly_reports (semaine 14) = fenetre semaine 14 (coherence avec les autres semaines ; la page Rapports recalcule de toute facon en direct).
+- VALIDE par Antoine le 06/09 -> commit + push + deploiement Vercel (voir ci-dessous).
 
 ## Fusion finale
 - [ ] Les 3 chantiers valides
@@ -102,5 +108,5 @@ Derniere mise a jour : 2026-09-05 (creation du fichier de suivi)
 - A faire ensuite : lire en entier les fichiers concernes par le Chantier 1 avant toute modification.
 
 ### 2026-09-06
-- Chantier 2 (carte "Bilan course" du Dashboard) IMPLEMENTE et TESTE E2E. Detail et cases cochees ci-dessus.
-- En attente de validation Antoine avant de passer au Chantier 3 (email de cloture). Ne pas enchainer.
+- Chantier 2 (carte "Bilan course" du Dashboard) IMPLEMENTE, TESTE E2E, VALIDE, POUSSE et DEPLOYE (LIVE). Detail ci-dessus.
+- Chantier 3 (email de cloture) IMPLEMENTE et TESTE (harnais dry-run pour la cloture, vraie route pour le garde-fou). Detail et cases cochees ci-dessus. En attente de validation Antoine avant commit/push/deploiement.

@@ -13,6 +13,16 @@ export const getProgramWeek = (startDate?: string): number => {
   return Math.min(Math.max(Math.floor(diffDays / 7) + 1, 1), 14)
 }
 
+// Semaine de programme NON clampée (peut dépasser 14). getProgramWeek borne à 14
+// pour l'affichage produit ; ici on garde la vraie valeur pour détecter la
+// semaine finale (=== 14) et l'après-programme (> 14, garde-fou anti-envoi).
+export const getRawProgramWeek = (startDate?: string): number => {
+  const start = startDate ? new Date(startDate) : PROGRAM_START_DATE
+  const now = new Date()
+  const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  return Math.max(Math.floor(diffDays / 7) + 1, 1)
+}
+
 export const getProgressPercent = (weekNumber: number): number => {
   return Math.round((weekNumber - 1) / 13 * 100)
 }

@@ -44,3 +44,26 @@ export const sendRaceDayEmail = async ({ to, toName, coachName, htmlContent }: R
     htmlContent,
   })
 }
+
+interface ClosingEmailParams {
+  to: string
+  toName: string
+  coachName: string
+  htmlContent: string
+}
+
+// Email de clôture (jour de la course, semaine 14/14). Même sender, sujet dédié
+// orienté bilan de fin de préparation.
+export const sendClosingEmail = async ({ to, toName, coachName, htmlContent }: ClosingEmailParams) => {
+  const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY! })
+
+  return client.transactionalEmails.sendTransacEmail({
+    sender: {
+      email: process.env.BREVO_SENDER_EMAIL ?? 'coach@foulee.run',
+      name: `${coachName} via Foulée`,
+    },
+    to: [{ email: to, name: toName }],
+    subject: `Ton bilan des 14 semaines, ${toName} 🎉`,
+    htmlContent,
+  })
+}
