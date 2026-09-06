@@ -94,9 +94,9 @@ Derniere mise a jour : 2026-09-05 (creation du fichier de suivi)
 - Aucun appel a la route cron en prod (aujourd'hui = semaine 13, le chemin hebdo ecrirait dans weekly_reports) : build READY + tests locaux (harnais cloture + garde-fou reel) suffisent. Le vrai declenchement de la cloture aura lieu automatiquement le dimanche 13/09 (cron 0 19 * * 0).
 
 ## Fusion finale
-- [ ] Les 3 chantiers valides
-- [ ] Decisions ajoutees a la table de `Foulée.md`
-- [ ] Confirmation Antoine avant suppression de ce fichier
+- [x] Les 3 chantiers valides et LIVE (email J-1, carte/modale bilan course, email de cloture).
+- [x] Decisions ajoutees a la table de `Foulée.md` (Chantier 2 le 06/09 ; Chantier 3 le 06/09).
+- [ ] Suppression de ce fichier : Antoine a demande de le CONSERVER (06/09), notamment pour verifier le vrai envoi du 13/09. Ne pas supprimer.
 
 ---
 
