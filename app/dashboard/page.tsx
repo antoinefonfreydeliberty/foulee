@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { CoachMessage } from '@/components/coach/CoachMessage'
 import { SessionCard } from '@/components/training/SessionCard'
+import RaceDayBilanCard from '@/components/dashboard/RaceDayBilanCard'
 import {
   getDaysLeft, getProgramWeek, getProgramWeekStart,
   getProgressPercent, getWeekStart,
@@ -28,7 +29,16 @@ export default async function DashboardPage() {
 
   const nextWeekDate = new Date(new Date(weekStart).getTime() + 7 * 86400000)
 
-  const [{ data: currentProgram }, { data: latestReport }, { data: weekLogs }] = await Promise.all([
+  // Bilan course : la carte s'affiche des le jour de la course (Europe/Paris),
+  // et tant qu'aucune sortie n'est enregistree a cette date precise. RACE_DATE
+  // est lue depuis l'env (dates.ts hardcode sa propre valeur pour getDaysLeft ;
+  // on la relit ici pour rendre l'override de test effectif).
+  const raceDate = process.env.RACE_DATE ?? '2026-09-13'
+  const todayParis = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date())
+
+  const [{ data: currentProgram }, { data: latestReport }, { data: weekLogs }, { data: raceDayLog }] = await Promise.all([
     supabase
       .from('training_programs').select('*')
       .eq('user_id', user.id).eq('week_start', currentWeekProgramStart).maybeSingle(),
@@ -40,7 +50,13 @@ export default async function DashboardPage() {
       .eq('user_id', user.id)
       .gte('date', weekStart)
       .lt('date', nextWeekDate.toISOString().split('T')[0]),
+    supabase
+      .from('training_logs').select('id')
+      .eq('user_id', user.id).eq('date', raceDate).limit(1).maybeSingle(),
   ])
+
+  const showRaceDayCard = todayParis >= raceDate && !raceDayLog
+  const isRaceDay       = todayParis === raceDate  // jour J : presentation en modale bloquante
 
   const program = currentProgram as TrainingProgram | null
   const report  = latestReport  as WeeklyReport | null
@@ -84,6 +100,10 @@ export default async function DashboardPage() {
           {profile.first_name.charAt(0).toUpperCase()}
         </div>
       </div>
+
+      {/* Bilan course : jour J en modale bloquante, jours suivants en carte inline,
+          tant qu'aucune seance n'est enregistree a RACE_DATE */}
+      {showRaceDayCard && <RaceDayBilanCard raceDate={raceDate} blocking={isRaceDay} />}
 
       {/* Coach Bubble */}
       <CoachMessage coachName={profile.coach_name} content={coachMsg} />
