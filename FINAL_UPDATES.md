@@ -90,7 +90,8 @@ Derniere mise a jour : 2026-09-05 (creation du fichier de suivi)
 - Perimetre : `lib/utils/dates.ts` (helper additif), `lib/claude/closing-prompt.ts` (new), `lib/brevo/closing-email.ts` (new), `lib/brevo/client.ts` (sendClosingEmail ajoute), `app/api/cron/weekly-report/route.ts` (garde-fou + branche isFinalWeek + podium). Aucun `foulee-paris/` ni `foulee_pro/`.
 - NON teste en reel sur la vraie route en mode semaine finale : ce chemin fait un upsert weekly_reports (pollution prod + risque idempotence pour le vrai 13/09) -> valide uniquement par le harnais sans ecriture. Seul le garde-fou (retour anticipe) a ete lance en reel.
 - `stats` stockee dans weekly_reports (semaine 14) = fenetre semaine 14 (coherence avec les autres semaines ; la page Rapports recalcule de toute facon en direct).
-- VALIDE par Antoine le 06/09 -> commit + push + deploiement Vercel (voir ci-dessous).
+- VALIDE par Antoine le 06/09 -> commit `6f67a96` (6 fichiers ; foulee-paris/foulee_pro exclus), push CLI autonome (`f1417c2..6f67a96`), auto-deploy Vercel `dpl_zg7PbtoBjx5x8ySfh4j3x7aCuiej` **READY** en production, alias foulee.run a jour. CHANTIER 3 LIVE le 06/09.
+- Aucun appel a la route cron en prod (aujourd'hui = semaine 13, le chemin hebdo ecrirait dans weekly_reports) : build READY + tests locaux (harnais cloture + garde-fou reel) suffisent. Le vrai declenchement de la cloture aura lieu automatiquement le dimanche 13/09 (cron 0 19 * * 0).
 
 ## Fusion finale
 - [ ] Les 3 chantiers valides
